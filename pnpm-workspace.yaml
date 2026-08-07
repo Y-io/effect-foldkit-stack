@@ -17,3 +17,9 @@ minimumReleaseAgeExclude:
   - "@effect/platform-node@4.0.0-beta.105"
   - effect@4.0.0-beta.105
   - "@effect/vitest@4.0.0-beta.105"
+  - "@foldkit/devtools@0.140.1"
+  - "@foldkit/vite-plugin@0.12.1"
+  - foldkit@0.140.0
+  - happy-dom@20.11.2
+  - "@foldkit/ui@0.140.1"
+  - "@heroui/styles@3.2.4"

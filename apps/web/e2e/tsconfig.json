@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnosticSeverity": {
+          "asyncFunction": "off"
+        }
+      }
+    ],
+    "types": ["@playwright/test"]
+  },
+  "include": ["./**/*.ts"],
+  "exclude": []
+}

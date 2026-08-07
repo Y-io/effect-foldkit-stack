@@ -11,6 +11,7 @@
     "lint": "oxlint --config oxlint.config.ts .",
     "lint:fix": "oxlint --config oxlint.config.ts --fix .",
     "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
     "typecheck": "turbo run typecheck",
     "prepare": "effect-tsgo patch --typescript --oxlint"
   },
