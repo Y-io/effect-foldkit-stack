@@ -1,15 +1,21 @@
 {
   "name": "effect-foldkit-stack",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "turbo run build",
     "clean": "turbo run clean",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
     "turbo": "^2.10.8"
   },
   "packageManager": "pnpm@11.9.0"
