@@ -11,12 +11,16 @@
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "prepare": "effect-tsgo patch --typescript --oxlint"
   },
   "devDependencies": {
+    "@effect/tsgo": "0.35.0",
     "oxfmt": "0.62.0",
     "oxlint": "1.77.0",
-    "turbo": "^2.10.8"
+    "oxlint-tsgolint": "7.0.2001",
+    "turbo": "^2.10.8",
+    "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@11.9.0"
+  "packageManager": "pnpm@11.20.0"
 }
