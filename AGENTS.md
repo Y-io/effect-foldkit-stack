@@ -1,5 +1,7 @@
 ## Agent skills
 
+When grilling, ask me one question at a time.
+
 ### Issue tracker
 
 Issues are tracked in GitHub Issues for `Y-io/effect-foldkit-stack`. See `docs/agents/issue-tracker.md`.
