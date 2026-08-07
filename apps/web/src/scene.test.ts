@@ -4,11 +4,13 @@ import { describe, test } from "vitest";
 import * as Counter from "./counter";
 import { Model, update, view } from "./main";
 import { ExampleRoute, HomeRoute, RoutingHomeRoute } from "./route";
+import * as UiShowcase from "./ui-showcase";
 
 const modelOn = (route: Model["route"]): Model =>
   Model.make({
     route,
     counter: Counter.init(),
+    uiShowcase: UiShowcase.init(),
     transitionLog: ["cold load"],
     isSignedIn: false,
   });

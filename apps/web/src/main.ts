@@ -9,6 +9,7 @@ import { Url, toString as urlToString } from "foldkit/url";
 
 import * as Counter from "./counter";
 import { Example, exampleSourceUrl, examples, findExample } from "./example";
+import * as UiShowcase from "./ui-showcase";
 import {
   AppRoute,
   ProductId,
@@ -103,6 +104,7 @@ const describeTransition = (transition: Transition.Transition<AppRoute>): string
 export const Model = S.Struct({
   route: AppRoute,
   counter: Counter.Model,
+  uiShowcase: UiShowcase.Model,
   transitionLog: S.Array(S.String),
   isSignedIn: S.Boolean,
 });
@@ -123,6 +125,9 @@ export const ClickedNavigateForward = m("ClickedNavigateForward");
 export const ClickedSignIn = m("ClickedSignIn");
 export const ClickedSignOut = m("ClickedSignOut");
 export const GotCounterMessage = m("GotCounterMessage", { message: Counter.Message });
+export const GotUiShowcaseMessage = m("GotUiShowcaseMessage", {
+  message: UiShowcase.Message,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -138,6 +143,7 @@ export const Message = S.Union([
   ClickedSignIn,
   ClickedSignOut,
   GotCounterMessage,
+  GotUiShowcaseMessage,
 ]);
 export type Message = typeof Message.Type;
 
@@ -191,6 +197,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
   const model = Model.make({
     route,
     counter: Counter.init(),
+    uiShowcase: UiShowcase.init(),
     transitionLog: [describeTransition(Transition.coldLoad(route))],
     isSignedIn: false,
   });
@@ -275,6 +282,19 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           evo(model, { counter: () => nextCounter }),
           Command.mapMessages(counterCommands, (childMessage) =>
             GotCounterMessage({ message: childMessage }),
+          ),
+        ];
+      },
+
+      GotUiShowcaseMessage: ({ message: uiShowcaseMessage }) => {
+        const [nextUiShowcase, uiShowcaseCommands] = UiShowcase.update(
+          model.uiShowcase,
+          uiShowcaseMessage,
+        );
+        return [
+          evo(model, { uiShowcase: () => nextUiShowcase }),
+          Command.mapMessages(uiShowcaseCommands, (childMessage) =>
+            GotUiShowcaseMessage({ message: childMessage }),
           ),
         ];
       },
@@ -477,6 +497,20 @@ const counterExampleView = (example: Example, model: Model, h: HtmlBuilder<Messa
     ],
   );
 
+const uiShowcaseExampleView = (example: Example, model: Model, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [],
+    [
+      pageHeaderView(example.difficulty, example.title, example.description, h),
+      h.submodel({
+        slotId: "ui-showcase",
+        model: model.uiShowcase,
+        view: UiShowcase.view,
+        toParentMessage: (message) => GotUiShowcaseMessage({ message }),
+      }),
+    ],
+  );
+
 const missingExampleView = (slug: string, h: HtmlBuilder<Message>): Html =>
   h.div(
     [],
@@ -500,6 +534,8 @@ const exampleView = (slug: string, model: Model, h: HtmlBuilder<Message>): Html 
     onSome: (example) => {
       if (example.slug === "counter") {
         return counterExampleView(example, model, h);
+      } else if (example.slug === "ui-showcase") {
+        return uiShowcaseExampleView(example, model, h);
       } else {
         return plannedExampleView(example, h);
       }

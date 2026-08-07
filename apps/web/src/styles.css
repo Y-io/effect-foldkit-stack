@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "@pkg/ui/styles.css";
 
 :root {
   color: #172019;

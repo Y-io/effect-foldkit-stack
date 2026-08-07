@@ -14,6 +14,6 @@ describe("official example manifest", () => {
       Array.filter(examples, (example) => example.status === "Ready").map(
         (example) => example.slug,
       ),
-    ).toStrictEqual(["counter", "routing"]);
+    ).toStrictEqual(["counter", "routing", "ui-showcase"]);
   });
 });

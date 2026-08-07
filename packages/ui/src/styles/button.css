@@ -1,0 +1,25 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/button.css" layer(components);
+
+.pkg-ui-spinner {
+  width: 1rem;
+  height: 1rem;
+  animation: pkg-ui-spin 700ms linear infinite;
+}
+
+.pkg-ui-spinner circle {
+  opacity: 0.25;
+}
+
+@keyframes pkg-ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pkg-ui-spinner {
+    animation-duration: 1ms;
+  }
+}

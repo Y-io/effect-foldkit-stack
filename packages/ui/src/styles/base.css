@@ -1,0 +1,8 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/themes/default" layer(theme);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";

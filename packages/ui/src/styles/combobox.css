@@ -1,0 +1,25 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/combo-box.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/list-box.css" layer(components);
+@import "@heroui/styles/components/list-box-item.css" layer(components);
+
+.pkg-ui-combobox-popover {
+  z-index: 60;
+  max-height: min(20rem, var(--available-height, 20rem));
+}
+
+.pkg-ui-combobox-popover[data-enter] {
+  animation: pkg-ui-enter 150ms ease-out both;
+}
+
+.pkg-ui-combobox-popover[data-leave] {
+  animation: pkg-ui-leave 100ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pkg-ui-combobox-popover {
+    animation-duration: 1ms;
+  }
+}

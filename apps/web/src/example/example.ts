@@ -284,10 +284,10 @@ export const examples: ReadonlyArray<Example> = [
   {
     slug: "ui-showcase",
     title: "UI Showcase",
-    description: "Interactive examples of the complete Foldkit UI component set.",
+    description: "Button, Dialog, and Combobox from the Foldkit-native @pkg/ui package.",
     difficulty: "Advanced",
     tags: ["UI Components", "Routing"],
-    status: "Planned",
+    status: "Ready",
   },
   {
     slug: "personal-blog",
