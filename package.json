@@ -8,8 +8,8 @@
     "dev": "turbo run dev",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
-    "lint": "oxlint .",
-    "lint:fix": "oxlint --fix .",
+    "lint": "oxlint --config oxlint.config.ts .",
+    "lint:fix": "oxlint --config oxlint.config.ts --fix .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "prepare": "effect-tsgo patch --typescript --oxlint"
