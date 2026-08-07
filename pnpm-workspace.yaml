@@ -1,6 +1,8 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  msgpackr-extract: false
 minimumReleaseAgeExclude:
   - "@effect/tsgo-darwin-arm64@0.35.0"
   - "@effect/tsgo-darwin-x64@0.35.0"
@@ -10,3 +12,8 @@ minimumReleaseAgeExclude:
   - "@effect/tsgo-win32-arm64@0.35.0"
   - "@effect/tsgo-win32-x64@0.35.0"
   - "@effect/tsgo@0.35.0"
+  - "@effect/platform-browser@4.0.0-beta.105"
+  - "@effect/platform-node-shared@4.0.0-beta.105"
+  - "@effect/platform-node@4.0.0-beta.105"
+  - effect@4.0.0-beta.105
+  - "@effect/vitest@4.0.0-beta.105"
