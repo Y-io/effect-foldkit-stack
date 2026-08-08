@@ -14,6 +14,10 @@ Use the default five-label triage vocabulary. See `docs/agents/triage-labels.md`
 
 This repository uses the single-context layout. See `docs/agents/domain.md`.
 
+### Documentation language
+
+面向人的核心文档、规格、GitHub issue、ADR、任务说明与验收标准默认使用简体中文。代码标识符、包名、API/CSS 名称及不可替代的技术术语保留英文；关键术语首次出现时可附简短中文解释。
+
 ## Vendored repositories
 
 This project vendors external repositories under `repos/`.
