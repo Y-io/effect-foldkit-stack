@@ -1,0 +1,17 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/input-group.css" layer(components);
+
+@layer components {
+  .pkg-ui-input-group > [data-slot="input-group-input"],
+  .pkg-ui-input-group > [data-slot="input-group-input"]:hover,
+  .pkg-ui-input-group > [data-slot="input-group-input"]:focus,
+  .pkg-ui-input-group > [data-slot="input-group-input"]:focus-visible,
+  .pkg-ui-input-group > [data-slot="input-group-input"][aria-invalid="true"] {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+  }
+}

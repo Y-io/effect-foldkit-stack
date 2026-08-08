@@ -23,6 +23,10 @@
       "types": "./src/input.ts",
       "import": "./src/input.ts"
     },
+    "./input-group": {
+      "types": "./src/input-group.ts",
+      "import": "./src/input-group.ts"
+    },
     "./combobox": {
       "types": "./src/combobox.ts",
       "import": "./src/combobox.ts"
@@ -40,6 +44,7 @@
     "./styles/button.css": "./src/styles/button.css",
     "./styles/dialog.css": "./src/styles/dialog.css",
     "./styles/input.css": "./src/styles/input.css",
+    "./styles/input-group.css": "./src/styles/input-group.css",
     "./styles/combobox.css": "./src/styles/combobox.css",
     "./package.json": "./package.json"
   },
