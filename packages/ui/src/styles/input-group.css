@@ -15,34 +15,69 @@
     outline: none;
   }
 
-  .pkg-ui-input-group:has(> [data-slot="input-group-input"][aria-invalid="true"]) {
+  .pkg-ui-input-group:has(> [data-slot="input-group-input"][aria-invalid="true"]):not(
+      :has(> [data-slot="input-group-input"]:disabled)
+    ) {
     @apply status-invalid-field;
     border-color: var(--color-field-border-invalid);
     background-color: var(--field-focus);
   }
 
-  .pkg-ui-input-group:has(> [data-slot="input-group-input"][data-readonly]):not(
-      :has(> [data-slot="input-group-input"]:focus)
-    ):not(:has(> [data-slot="input-group-input"][aria-invalid="true"])) {
+  .pkg-ui-input-group:has(> [data-slot="input-group-input"][data-readonly]):not(:focus-within):not(
+      :has(> [data-slot="input-group-input"][aria-invalid="true"])
+    ):not(:has(> [data-slot="input-group-input"]:disabled)) {
     background-color: var(--default);
   }
 
-  .pkg-ui-input-group:has(> [data-slot="input-group-input"]:focus):not(
+  .pkg-ui-input-group:focus-within:not(
       :has(> [data-slot="input-group-input"][aria-invalid="true"])
-    ) {
+    ):not(:has(> [data-slot="input-group-input"]:disabled)) {
     @apply status-focused-field;
     border-color: var(--field-border-focus);
     background-color: var(--field-focus);
   }
 
-  .textfield:has(> .pkg-ui-input-group > [data-slot="input-group-input"][aria-invalid="true"])
+  .textfield:has(
+      > .pkg-ui-input-group > [data-slot="input-group-input"][aria-invalid="true"]:not(:disabled)
+    )
     > .label,
-  .textfield:has(> .pkg-ui-input-group > [data-slot="input-group-input"][aria-invalid="true"])
+  .textfield:has(
+      > .pkg-ui-input-group > [data-slot="input-group-input"][aria-invalid="true"]:not(:disabled)
+    )
     > [data-slot="description"] {
     @apply text-danger;
   }
 
-  .pkg-ui-input-group > [data-slot="input-group-input"]:focus-visible {
+  .pkg-ui-input-group > .pkg-ui-input-group-action {
+    --button-bg: transparent;
+    --button-bg-hover: var(--field-hover);
+    --button-bg-pressed: var(--default);
+    --button-fg: var(--field-foreground);
+
+    box-shadow: none;
+    outline: none;
+    transform: none;
+  }
+
+  .pkg-ui-input-group > .pkg-ui-input-group-action[aria-disabled="true"] {
+    --button-bg-hover: transparent;
+    --button-bg-pressed: transparent;
+
+    background-color: transparent;
+    opacity: 1;
+  }
+
+  .pkg-ui-input-group:has(> [data-slot="input-group-input"]:disabled) {
+    opacity: var(--disabled-opacity);
+    cursor: var(--cursor-disabled);
+    border-color: var(--field-border);
+    background-color: var(--default);
+    box-shadow: var(--field-shadow);
+    outline: none;
+  }
+
+  .pkg-ui-input-group > [data-slot="input-group-input"]:focus-visible,
+  .pkg-ui-input-group > .pkg-ui-input-group-action:focus-visible {
     box-shadow: inset 0 0 0 2px var(--focus);
   }
 }

@@ -269,6 +269,45 @@ export const view = Submodel.defineView<Model, Message>((model, h) =>
             },
             h,
           ),
+          InputGroup.view(
+            {
+              input: {
+                id: "readonly-action-grouped-input",
+                label: "Readonly action grouped input",
+                value: "Read only with an available action",
+                isReadOnly: true,
+              },
+              suffix: {
+                kind: "action",
+                button: {
+                  content: "Open from action affix",
+                  onClick: ClickedUiShowcaseDialog(),
+                },
+              },
+            },
+            h,
+          ),
+          InputGroup.view(
+            {
+              isDisabled: true,
+              input: {
+                id: "disabled-action-grouped-input",
+                label: "Disabled action grouped input",
+                description: "Disabled state overrides this invalid surface.",
+                value: "Disabled",
+                isInvalid: true,
+                isReadOnly: true,
+              },
+              suffix: {
+                kind: "action",
+                button: {
+                  content: "Disabled action affix",
+                  onClick: ClickedUiShowcaseDialog(),
+                },
+              },
+            },
+            h,
+          ),
         ],
       ),
 
