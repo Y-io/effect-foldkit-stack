@@ -1,0 +1,18 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/textfield.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/label.css" layer(components);
+@import "@heroui/styles/components/description.css" layer(components);
+
+@layer components {
+  .pkg-ui-input[aria-invalid="true"] {
+    @apply status-invalid-field;
+    background-color: var(--field-focus);
+  }
+
+  .textfield:has(> .pkg-ui-input[aria-invalid="true"]) > .label,
+  .textfield:has(> .pkg-ui-input[aria-invalid="true"]) > [data-slot="description"] {
+    @apply text-danger;
+  }
+}
