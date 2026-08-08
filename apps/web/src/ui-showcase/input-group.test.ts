@@ -49,6 +49,21 @@ const view = (model: Model, h: HtmlBuilder<Message>) =>
     ],
   );
 
+const stateView = (model: Model, h: HtmlBuilder<Message>) =>
+  InputGroup.view(
+    {
+      input: {
+        id: "derived-state",
+        label: "Derived state",
+        description: "State remains owned by the Foldkit Input",
+        value: model.value,
+        isInvalid: true,
+        isReadOnly: true,
+      },
+    },
+    h,
+  );
+
 describe("Decorative Input Group", () => {
   test("组合恰好一个主 Input，并保留父级 Message 与 Description Channel", () => {
     const input = Scene.role("textbox", { name: "Invoice amount" });
@@ -64,6 +79,19 @@ describe("Decorative Input Group", () => {
       Scene.type(input, "125.00"),
       Scene.expect(input).toHaveValue("125.00"),
       Scene.expect(Scene.text("125.00")).toExist(),
+    );
+  });
+
+  test("invalid 与 readonly 语义仍只由主 Foldkit Input 输出", () => {
+    const input = Scene.role("textbox", { name: "Derived state" });
+
+    Scene.scene(
+      { update, view: stateView },
+      Scene.given(Model.make({ value: "locked" })),
+      Scene.expect(input).toHaveAttr("aria-invalid", "true"),
+      Scene.expect(input).toHaveAttr("data-readonly"),
+      Scene.expect(input).toHaveAccessibleDescription("State remains owned by the Foldkit Input"),
+      Scene.expect(input).toHaveValue("locked"),
     );
   });
 });

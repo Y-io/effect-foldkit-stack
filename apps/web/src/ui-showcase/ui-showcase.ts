@@ -3,7 +3,7 @@ import { Command, Submodel } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { m } from "foldkit/message";
 import { evo } from "foldkit/struct";
-import { Button, Combobox, Dialog } from "@pkg/ui";
+import { Button, Combobox, Dialog, Input, InputGroup } from "@pkg/ui";
 
 export const City = S.Literals(["dubai", "london", "shanghai"]);
 export type City = typeof City.Type;
@@ -220,6 +220,55 @@ export const view = Submodel.defineView<Model, Message>((model, h) =>
             },
           }),
           h.p([h.Class("text-sm text-muted")], [cityLabel(model.maybeCity)]),
+        ],
+      ),
+
+      h.div(
+        [h.Class("grid max-w-sm gap-4")],
+        [
+          InputGroup.view(
+            {
+              input: {
+                id: "plain-grouped-input",
+                label: "Plain grouped input",
+                description: "Focus demonstrates the shared and local focus indicators.",
+              },
+              prefix: { kind: "decorative", content: "#", isHiddenFromAccessibility: true },
+            },
+            h,
+          ),
+          InputGroup.view(
+            {
+              input: {
+                id: "readonly-grouped-input",
+                label: "Readonly grouped input",
+                value: "Read only",
+                isReadOnly: true,
+              },
+            },
+            h,
+          ),
+          InputGroup.view(
+            {
+              input: {
+                id: "invalid-grouped-input",
+                label: "Invalid grouped input",
+                description: "This value is invalid.",
+                isInvalid: true,
+                isReadOnly: true,
+              },
+            },
+            h,
+          ),
+          Input.view(
+            {
+              id: "standalone-invalid-input",
+              label: "Standalone invalid input",
+              description: "Standalone styling remains independent.",
+              isInvalid: true,
+            },
+            h,
+          ),
         ],
       ),
 
