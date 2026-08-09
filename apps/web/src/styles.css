@@ -62,9 +62,29 @@ html:active-view-transition-type(to-example-index) ::view-transition-new(root) {
   }
 }
 
+.component-docs-motion-sample {
+  display: block;
+  width: 3rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: component-docs-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes component-docs-pulse {
+  to {
+    transform: translateX(2rem);
+    opacity: 0.55;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
+
+  .component-docs-motion-sample {
     animation-duration: 1ms;
   }
 }

@@ -3,6 +3,7 @@ import { fromString } from "foldkit/url";
 import { describe, expect, test } from "vitest";
 
 import {
+  ComponentsIndexRoute,
   ProductId,
   deepRouter,
   exampleRouter,
@@ -123,5 +124,20 @@ describe("route parser", () => {
       _tag: "NotFound",
       path: "/does-not-exist",
     });
+  });
+
+  test("parses component documentation filters within their published value ranges", () => {
+    expect(
+      parse("/components?catalog=parts&phase=1&behaviorClass=A&status=verified"),
+    ).toStrictEqual(
+      ComponentsIndexRoute({
+        catalog: Option.some("parts"),
+        phase: Option.some(1),
+        behaviorClass: Option.some("A"),
+        status: Option.some("verified"),
+      }),
+    );
+    expect(parse("/components?phase=8")._tag).toBe("NotFound");
+    expect(parse("/components?catalog=Parts")._tag).toBe("NotFound");
   });
 });

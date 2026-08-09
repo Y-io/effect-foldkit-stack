@@ -2,6 +2,8 @@ import { Schema as S, SchemaGetter, pipe } from "effect";
 import { Route } from "foldkit";
 import { int, literal, r, rest, restString, schemaSegment, slash, string } from "foldkit/route";
 
+import { BehaviorClass, Catalog, Phase, Status } from "../component-docs/metadata";
+
 const PRODUCT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const ProductId = S.String.check(S.isPattern(PRODUCT_ID_PATTERN)).pipe(S.brand("ProductId"));
@@ -12,6 +14,11 @@ const CsvTags = S.String.pipe(
     decode: SchemaGetter.transform((input) => input.split(",").filter((tag) => tag.length > 0)),
     encode: SchemaGetter.transform((tags) => tags.join(",")),
   }),
+);
+
+const ComponentPhaseFromString = S.FiniteFromString.check(
+  S.isInt(),
+  S.isBetween({ minimum: 1, maximum: 7 }),
 );
 
 export const HomeRoute = r("Home");
@@ -40,6 +47,16 @@ export const VaultIndexRoute = r("VaultIndex");
 export const VaultNoteRoute = r("VaultNote", { path: S.String });
 export const GuardedRoute = r("Guarded");
 export const SignInRoute = r("SignIn", { redirectTo: S.Option(S.String) });
+export const ComponentsIndexRoute = r("ComponentsIndex", {
+  catalog: S.Option(Catalog),
+  phase: S.Option(Phase),
+  behaviorClass: S.Option(BehaviorClass),
+  status: S.Option(Status),
+});
+export const ComponentsPartsRoute = r("ComponentsParts");
+export const ComponentsStandaloneRoute = r("ComponentsStandalone");
+export const ComponentPartRoute = r("ComponentPart", { slug: S.String });
+export const VisualProtocolRoute = r("VisualProtocol");
 export const NotFoundRoute = r("NotFound", { path: S.String });
 
 export const AppRoute = S.Union([
@@ -61,6 +78,11 @@ export const AppRoute = S.Union([
   VaultNoteRoute,
   GuardedRoute,
   SignInRoute,
+  ComponentsIndexRoute,
+  ComponentsPartsRoute,
+  ComponentsStandaloneRoute,
+  ComponentPartRoute,
+  VisualProtocolRoute,
   NotFoundRoute,
 ]);
 export type AppRoute = typeof AppRoute.Type;
@@ -204,7 +226,51 @@ export const exampleRouter = pipe(
   Route.mapTo(ExampleRoute),
 );
 
+export const componentPartRouter = pipe(
+  literal("components"),
+  slash(literal("parts")),
+  slash(string("slug")),
+  Route.mapTo(ComponentPartRoute),
+);
+
+export const componentsPartsRouter = pipe(
+  literal("components"),
+  slash(literal("parts")),
+  Route.mapTo(ComponentsPartsRoute),
+);
+
+export const componentsStandaloneRouter = pipe(
+  literal("components"),
+  slash(literal("standalone")),
+  Route.mapTo(ComponentsStandaloneRoute),
+);
+
+export const componentsIndexRouter = pipe(
+  literal("components"),
+  Route.query(
+    S.Struct({
+      catalog: S.OptionFromOptional(Catalog),
+      phase: S.OptionFromOptional(ComponentPhaseFromString),
+      behaviorClass: S.OptionFromOptional(BehaviorClass),
+      status: S.OptionFromOptional(Status),
+    }),
+  ),
+  Route.mapTo(ComponentsIndexRoute),
+);
+
+export const visualProtocolRouter = pipe(
+  literal("components"),
+  slash(literal("foundations")),
+  slash(literal("visual-protocol")),
+  Route.mapTo(VisualProtocolRoute),
+);
+
 const routeParser = Route.oneOf(
+  visualProtocolRouter,
+  componentPartRouter,
+  componentsStandaloneRouter,
+  componentsPartsRouter,
+  componentsIndexRouter,
   deepRouter,
   teamMemberRouter,
   productRouter,

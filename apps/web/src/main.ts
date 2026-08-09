@@ -8,10 +8,12 @@ import { evo } from "foldkit/struct";
 import { Url, toString as urlToString } from "foldkit/url";
 
 import * as Counter from "./counter";
+import * as ComponentDocs from "./component-docs";
 import { Example, exampleSourceUrl, examples, findExample } from "./example";
 import * as UiShowcase from "./ui-showcase";
 import {
   AppRoute,
+  componentsIndexRouter,
   ProductId,
   deepRouter,
   exampleRouter,
@@ -56,6 +58,13 @@ const routingRouteTags: ReadonlyArray<AppRoute["_tag"]> = [
 ];
 
 const isRoutingRoute = (route: AppRoute): boolean => Array.contains(routingRouteTags, route._tag);
+
+const isComponentRoute = (route: AppRoute): boolean =>
+  route._tag === "ComponentsIndex" ||
+  route._tag === "ComponentsParts" ||
+  route._tag === "ComponentsStandalone" ||
+  route._tag === "ComponentPart" ||
+  route._tag === "VisualProtocol";
 
 const isCounterRoute = (route: AppRoute): boolean =>
   route._tag === "Example" && route.slug === "counter";
@@ -1068,6 +1077,29 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
       VaultNote: () => routingLabView(model, h),
       Guarded: () => routingLabView(model, h),
       SignIn: () => routingLabView(model, h),
+      ComponentsIndex: (filters) => ComponentDocs.indexView(filters, h),
+      ComponentsParts: () =>
+        ComponentDocs.indexView(
+          {
+            catalog: Option.some("parts"),
+            phase: Option.none(),
+            behaviorClass: Option.none(),
+            status: Option.none(),
+          },
+          h,
+        ),
+      ComponentsStandalone: () =>
+        ComponentDocs.indexView(
+          {
+            catalog: Option.some("standalone"),
+            phase: Option.none(),
+            behaviorClass: Option.none(),
+            status: Option.none(),
+          },
+          h,
+        ),
+      ComponentPart: ({ slug }) => ComponentDocs.partView(slug, h),
+      VisualProtocol: () => ComponentDocs.visualProtocolView(h),
       NotFound: ({ path }) => notFoundView(path, h),
     }),
   );
@@ -1191,6 +1223,21 @@ const siteHeaderView = (route: AppRoute, h: HtmlBuilder<Message>): Html =>
                 ],
                 ["Examples"],
               ),
+              h.a(
+                [
+                  h.Href(
+                    componentsIndexRouter({
+                      catalog: Option.none(),
+                      phase: Option.none(),
+                      behaviorClass: Option.none(),
+                      status: Option.none(),
+                    }),
+                  ),
+                  ...(isComponentRoute(route) ? [h.AriaCurrent("page")] : []),
+                  h.Class("rounded-full px-4 py-2 text-sm font-bold text-[#4b574c] hover:bg-white"),
+                ],
+                ["Components"],
+              ),
             ],
           ),
         ],
@@ -1208,6 +1255,10 @@ const routeTitle = (route: AppRoute): string => {
       onNone: () => "Example Not Found | Foldkit Route Atlas",
       onSome: (example) => `${example.title} | Foldkit Route Atlas`,
     });
+  } else if (route._tag === "ComponentPart") {
+    return `${route.slug} | Components | Foldkit Route Atlas`;
+  } else if (isComponentRoute(route)) {
+    return "Components | Foldkit Route Atlas";
   } else if (route._tag === "NotFound") {
     return "404 | Foldkit Route Atlas";
   } else {
@@ -1224,7 +1275,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
       h.div(
         [h.Class("lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]")],
         [
-          sidebarView(model.route, h),
+          isComponentRoute(model.route)
+            ? ComponentDocs.navigationView(h)
+            : sidebarView(model.route, h),
           h.main([h.Class("min-w-0 px-5 py-10 sm:px-8 xl:px-12")], [routeContentView(model, h)]),
         ],
       ),
