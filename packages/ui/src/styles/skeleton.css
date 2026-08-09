@@ -1,0 +1,11 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/skeleton.css" layer(components);
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton--shimmer::before,
+  .skeleton--shimmer::after,
+  .skeleton--pulse {
+    animation: none;
+  }
+}

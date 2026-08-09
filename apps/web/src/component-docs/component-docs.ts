@@ -1,4 +1,7 @@
 import {
+  Badge,
+  Card,
+  Chip,
   Description,
   ErrorMessage,
   FieldError,
@@ -6,6 +9,7 @@ import {
   Kbd,
   Label,
   Separator,
+  Skeleton,
   Surface,
   Typography,
 } from "@pkg/ui";
@@ -20,8 +24,11 @@ import {
   visualProtocolRouter,
 } from "../route";
 import {
+  badgeMetadata,
   type BehaviorClass,
   type Catalog,
+  cardMetadata,
+  chipMetadata,
   type ComponentMetadata,
   type Phase,
   type Status,
@@ -33,6 +40,7 @@ import {
   labelMetadata,
   metadata,
   separatorMetadata,
+  skeletonMetadata,
   surfaceMetadata,
   typographyMetadata,
 } from "./metadata";
@@ -41,9 +49,17 @@ import {
 export const FieldExampleState = S.Literals(["Helper", "Validating", "Errors"]);
 export type FieldExampleState = typeof FieldExampleState.Type;
 
+/** Skeleton 文档示例中由外层 Model 持有的加载阶段。 */
+export const SkeletonExampleState = S.Literals(["Loading", "Loaded"]);
+export type SkeletonExampleState = typeof SkeletonExampleState.Type;
+
 type PartViewConfig<Message> = Readonly<{
   fieldExampleState: FieldExampleState;
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
+  recordedChipActionCount: number;
+  onRecordChipAction: Message;
+  skeletonExampleState: SkeletonExampleState;
+  onSkeletonExampleStateChange: (state: SkeletonExampleState) => Message;
 }>;
 
 const metadataRowView = <Message>(
@@ -926,6 +942,676 @@ const kbdPageView = <Message>(h: HtmlBuilder<Message>): Html =>
     h,
   );
 
+const badgeAnchorTargetView = <Message>(content: string, h: HtmlBuilder<Message>): Html =>
+  h.span(
+    [
+      h.AriaHidden(true),
+      h.Class(
+        "inline-flex size-12 items-center justify-center rounded-full bg-surface-secondary text-xs text-foreground",
+      ),
+    ],
+    [content],
+  );
+
+const badgePageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    badgeMetadata,
+    {
+      summary: "呈现 HeroUI Badge 视觉，同时让状态语义与更新时机继续由调用方拥有。",
+      usage: "用于数量、状态或分类等短标签，也可通过 anchor 与 placement 附着到已有内容。",
+      avoidance: "不用于保存计数、创建 live region 或根据业务状态自行显示与隐藏。",
+      behavior:
+        "原生 span 与调用方 attributes 是唯一 Behavior Authority。Badge 没有 Model、Message 或状态订阅。",
+      visual:
+        "color、variant、size 与 placement 直接映射 HeroUI badgeVariants；anchor、root 与 label 保持公开 anatomy。",
+      api: "view 呈现 root；labelView 呈现 label slot；anchorView 提供相对定位容器。三者都原样保留调用方 attributes。",
+      keyboardAndFocus:
+        "Badge 默认不可聚焦，不增加键盘路径；若调用方内容可交互，其行为属于该真实控件。",
+      aria: "Badge 不自动添加 status、alert 或 aria-live。需要播报的状态由调用方显式提供 role 与 accessible name。",
+      examples: [
+        exampleView(
+          "调用方拥有的状态语义",
+          [
+            Badge.anchorView(
+              {
+                attributes: [h.AriaLabel("未读通知 Badge anchor")],
+                content: [
+                  badgeAnchorTargetView("IN", h),
+                  Badge.view(
+                    {
+                      color: "accent",
+                      variant: "primary",
+                      attributes: [h.Role("status"), h.AriaLabel("3 条未读通知")],
+                      content: [Badge.labelView({ content: "3" }, h)],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Color 与 variant",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-3")],
+              [
+                Badge.anchorView(
+                  {
+                    content: [
+                      badgeAnchorTargetView("A", h),
+                      Badge.view(
+                        {
+                          color: "accent",
+                          variant: "soft",
+                          attributes: [h.AriaLabel("Accent soft Badge")],
+                          content: [Badge.labelView({ content: "New" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    content: [
+                      badgeAnchorTargetView("S", h),
+                      Badge.view(
+                        {
+                          color: "success",
+                          variant: "primary",
+                          attributes: [h.AriaLabel("Success primary Badge")],
+                          content: [Badge.labelView({ content: "Success" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    content: [
+                      badgeAnchorTargetView("W", h),
+                      Badge.view(
+                        {
+                          color: "warning",
+                          variant: "secondary",
+                          attributes: [h.AriaLabel("Warning secondary Badge")],
+                          content: [Badge.labelView({ content: "Warning" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    content: [
+                      badgeAnchorTargetView("D", h),
+                      Badge.view(
+                        {
+                          color: "danger",
+                          variant: "soft",
+                          attributes: [h.AriaLabel("Danger soft Badge")],
+                          content: [Badge.labelView({ content: "Danger" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    content: [
+                      badgeAnchorTargetView("D", h),
+                      Badge.view(
+                        {
+                          color: "default",
+                          variant: "primary",
+                          attributes: [h.AriaLabel("Default primary Badge")],
+                          content: [Badge.labelView({ content: "Default" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Size、placement 与长内容",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-8")],
+              [
+                Badge.anchorView(
+                  {
+                    attributes: [h.AriaLabel("Badge top-right anchor")],
+                    content: [
+                      badgeAnchorTargetView("TR", h),
+                      Badge.view(
+                        {
+                          color: "danger",
+                          placement: "top-right",
+                          size: "sm",
+                          attributes: [h.AriaLabel("Badge top-right small")],
+                          content: [Badge.labelView({ content: "3" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    attributes: [h.AriaLabel("Badge top-left anchor")],
+                    content: [
+                      badgeAnchorTargetView("TL", h),
+                      Badge.view(
+                        {
+                          color: "success",
+                          placement: "top-left",
+                          attributes: [h.AriaLabel("Badge top-left medium")],
+                          content: [Badge.labelView({ content: "TL" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    attributes: [h.AriaLabel("Badge bottom-right anchor")],
+                    content: [
+                      badgeAnchorTargetView("BR", h),
+                      Badge.view(
+                        {
+                          color: "warning",
+                          placement: "bottom-right",
+                          attributes: [h.AriaLabel("Badge bottom-right medium")],
+                          content: [Badge.labelView({ content: "BR" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                Badge.anchorView(
+                  {
+                    attributes: [h.AriaLabel("Badge bottom-left anchor")],
+                    content: [
+                      badgeAnchorTargetView("BL", h),
+                      Badge.view(
+                        {
+                          color: "accent",
+                          placement: "bottom-left",
+                          size: "lg",
+                          variant: "secondary",
+                          attributes: [h.AriaLabel("Badge bottom-left large")],
+                          content: [Badge.labelView({ content: "较长的徽标内容" }, h)],
+                        },
+                        h,
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const chipPageView = <Message>(config: PartViewConfig<Message>, h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    chipMetadata,
+    {
+      summary: "提供 HeroUI Chip 的无状态内容视觉，所有交互继续由调用方真实控件拥有。",
+      usage: "用于短标签、分类或带有调用方 action 的紧凑内容。",
+      avoidance: "不用于复制删除、选择或 pressed 行为，也不把整个 Chip 伪装成按钮。",
+      behavior:
+        "Chip 只呈现 span anatomy。示例中的记录动作来自调用方 button 和父级 Message，组件自身没有 Model、Message 或事件。",
+      visual:
+        "color、variant 与 size 直接映射 HeroUI chipVariants；label slot 和 root 保持独立视觉扩展入口。",
+      api: "view 接收完整调用方内容；labelView 映射 label slot。交互内容必须是调用方创建并命名的真实控件。",
+      keyboardAndFocus:
+        "Chip root 默认不可聚焦。嵌入的真实 button 保留自己的 Tab、Enter、Space 与焦点视觉。",
+      aria: "Chip 不生成 role、selected、pressed 或 disabled。交互控件必须保留自己的 accessible name 与状态。",
+      examples: [
+        exampleView(
+          "调用方 Action 与 Message",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-3")],
+              [
+                Chip.view(
+                  {
+                    color: "accent",
+                    variant: "soft",
+                    attributes: [h.AriaLabel("TypeScript action Chip")],
+                    content: [
+                      Chip.labelView({ content: "TypeScript" }, h),
+                      h.button(
+                        [
+                          h.Type("button"),
+                          h.AriaLabel("记录 TypeScript 标签操作"),
+                          h.OnClick(config.onRecordChipAction),
+                          h.Class(
+                            "rounded-full px-1 text-current focus-visible:outline focus-visible:outline-2",
+                          ),
+                        ],
+                        ["×"],
+                      ),
+                    ],
+                  },
+                  h,
+                ),
+                h.output([], [`已记录标签操作 ${config.recordedChipActionCount} 次`]),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Color 与 variant",
+          [
+            h.div(
+              [h.Class("flex flex-wrap gap-3")],
+              [
+                Chip.view(
+                  {
+                    color: "default",
+                    variant: "secondary",
+                    attributes: [h.AriaLabel("Default secondary Chip")],
+                    content: [Chip.labelView({ content: "Default" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    color: "accent",
+                    variant: "primary",
+                    attributes: [h.AriaLabel("Accent primary Chip")],
+                    content: [Chip.labelView({ content: "Accent" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    color: "success",
+                    variant: "soft",
+                    attributes: [h.AriaLabel("Success soft Chip")],
+                    content: [Chip.labelView({ content: "Success" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    color: "warning",
+                    variant: "tertiary",
+                    attributes: [h.AriaLabel("Warning tertiary Chip")],
+                    content: [Chip.labelView({ content: "Warning" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    color: "danger",
+                    variant: "primary",
+                    attributes: [h.AriaLabel("Danger primary Chip")],
+                    content: [Chip.labelView({ content: "Danger" }, h)],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Size、radius 与长文本",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-3")],
+              [
+                Chip.view(
+                  {
+                    size: "sm",
+                    attributes: [h.AriaLabel("Small Chip")],
+                    content: [Chip.labelView({ content: "Small" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    size: "md",
+                    className: "rounded-sm",
+                    attributes: [h.AriaLabel("Medium square Chip")],
+                    content: [Chip.labelView({ content: "Medium square" }, h)],
+                  },
+                  h,
+                ),
+                Chip.view(
+                  {
+                    size: "lg",
+                    attributes: [h.AriaLabel("Large long-content Chip")],
+                    content: [
+                      Chip.labelView({ content: "较长的 Chip 内容仍保持完整调用方文本" }, h),
+                    ],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const cardPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    cardMetadata,
+    {
+      summary: "提供 HeroUI Card anatomy 与表面视觉，同时保留调用方的内容和原生语义。",
+      usage:
+        "用于组织标题、说明、主体与页脚等嵌套内容，可由调用方赋予 landmark 与 accessible name。",
+      avoidance: "不用于引入卡片选择、点击、展开或导航行为，也不传播隐藏 Context。",
+      behavior:
+        "Card 的真实 div、heading、p 和调用方 attributes 是唯一 Behavior Authority。组件没有 Model、Message 或交互状态。",
+      visual:
+        "variant 映射 HeroUI cardVariants；header、title、description、content 与 footer 分别映射官方 slots。",
+      api: "view 组合完整 anatomy；titleView 允许调用方选择 h1-h6 或 p；其他 slot view 保留 attributes 与 className。",
+      keyboardAndFocus:
+        "Card anatomy 默认不进入 Tab 顺序。调用方放入的 link、button 或其他控件保留自己的键盘与焦点行为。",
+      aria: "Card 不自动添加 region、group 或 accessible name；landmark 与标题关系由调用方显式提供。",
+      examples: [
+        exampleView(
+          "完整 anatomy 与调用方语义",
+          [
+            Card.view(
+              {
+                attributes: [h.Role("region"), h.AriaLabel("项目摘要卡片")],
+                className: "max-w-md",
+                content: [
+                  Card.headerView(
+                    {
+                      content: [
+                        Card.titleView({ content: "项目状态", element: "h3" }, h),
+                        Card.descriptionView(
+                          { content: "调用方拥有 Card 内的嵌套内容与语义。" },
+                          h,
+                        ),
+                      ],
+                    },
+                    h,
+                  ),
+                  Card.contentView(
+                    {
+                      content: [
+                        h.ul(
+                          [h.Class("list-disc space-y-1 pl-5 text-sm text-foreground")],
+                          [h.li([], ["视觉映射已确认"]), h.li([], ["行为权威保持不变"])],
+                        ),
+                      ],
+                    },
+                    h,
+                  ),
+                  Card.footerView(
+                    {
+                      content: [h.p([h.Class("text-xs text-muted")], ["上次更新：今天 09:30"])],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Surface variants",
+          [
+            h.div(
+              [h.Class("grid gap-4 md:grid-cols-2")],
+              [
+                Card.view(
+                  {
+                    variant: "default",
+                    attributes: [h.Role("region"), h.AriaLabel("Default Card")],
+                    content: [Card.titleView({ content: "Default Card", element: "h4" }, h)],
+                  },
+                  h,
+                ),
+                Card.view(
+                  {
+                    variant: "secondary",
+                    attributes: [h.Role("region"), h.AriaLabel("Secondary Card")],
+                    content: [Card.titleView({ content: "Secondary Card", element: "h4" }, h)],
+                  },
+                  h,
+                ),
+                Card.view(
+                  {
+                    variant: "tertiary",
+                    attributes: [h.Role("region"), h.AriaLabel("Tertiary Card")],
+                    content: [Card.titleView({ content: "Tertiary Card", element: "h4" }, h)],
+                  },
+                  h,
+                ),
+                Card.view(
+                  {
+                    variant: "transparent",
+                    attributes: [h.Role("region"), h.AriaLabel("Transparent Card")],
+                    content: [Card.titleView({ content: "Transparent Card", element: "h4" }, h)],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Radius 与长内容边界",
+          [
+            Card.view(
+              {
+                variant: "secondary",
+                className: "max-w-xs rounded-sm",
+                attributes: [h.Role("region"), h.AriaLabel("Long-content Card")],
+                content: [
+                  Card.titleView({ content: "较长标题仍由调用方选择语义层级", element: "h5" }, h),
+                  Card.descriptionView(
+                    {
+                      content:
+                        "较长的 Card 描述与嵌套内容会自然换行，不创建新的交互或隐藏状态来源。",
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const loadingSkeletonExampleView = <Message>(h: HtmlBuilder<Message>): Html =>
+  Skeleton.view(
+    {
+      animationType: "shimmer",
+      attributes: [h.Id("skeleton-controlled"), h.AriaHidden(true)],
+      className: "h-20 w-full rounded-xl",
+    },
+    h,
+  );
+
+const loadedSkeletonExampleView = <Message>(h: HtmlBuilder<Message>): Html =>
+  h.div([h.Class("rounded-xl bg-surface-secondary p-5 text-foreground")], ["资料已加载"]);
+
+const skeletonExampleContentView = <Message>(
+  state: SkeletonExampleState,
+  h: HtmlBuilder<Message>,
+): Html => {
+  if (state === "Loading") {
+    return loadingSkeletonExampleView(h);
+  } else {
+    return loadedSkeletonExampleView(h);
+  }
+};
+
+const skeletonPageView = <Message>(
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    skeletonMetadata,
+    {
+      summary: "只投射 HeroUI Skeleton 占位视觉，loading 事实与 aria-busy 继续由外层 Model 拥有。",
+      usage: "用于外层已经处于 Loading 阶段时呈现内容占位，并支持 shimmer、pulse 与 none。",
+      avoidance: "不用于请求数据、保存 loading、自动切换真实内容或创建业务状态机。",
+      behavior:
+        "外层 Model 分支、真实内容和调用方 aria-busy 是唯一 Behavior Authority。Skeleton.view 没有 Model、Message 或定时器。",
+      visual:
+        "animationType 直接映射 HeroUI skeletonVariants；尺寸、圆角与布局通过 className 适配实际内容形状。",
+      api: "view 呈现原生 div，可接收可选嵌套视觉内容、attributes 与 className。是否渲染 Skeleton 由调用方 view 分支决定。",
+      keyboardAndFocus:
+        "Skeleton 不可聚焦并禁用 pointer events，不增加键盘路径；加载完成后的真实内容恢复自身行为。",
+      aria: "Skeleton 不自行添加 aria-busy、status 或 live region。纯视觉占位应由调用方 aria-hidden，并在拥有内容的容器表达 busy。",
+      examples: [
+        exampleView(
+          "外部 loading 事实",
+          [
+            h.section(
+              [
+                h.Role("region"),
+                h.AriaLabel("资料加载示例"),
+                h.AriaBusy(config.skeletonExampleState === "Loading"),
+                h.Class("max-w-md space-y-3"),
+              ],
+              [
+                skeletonExampleContentView(config.skeletonExampleState, h),
+                h.div(
+                  [h.Class("flex flex-wrap gap-2")],
+                  [
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onSkeletonExampleStateChange("Loaded"))],
+                      ["显示已加载内容"],
+                    ),
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onSkeletonExampleStateChange("Loading"))],
+                      ["重新加载"],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Animation types",
+          [
+            h.div(
+              [h.Class("grid max-w-md gap-4")],
+              [
+                Skeleton.view(
+                  {
+                    animationType: "shimmer",
+                    attributes: [h.Id("skeleton-shimmer"), h.AriaHidden(true)],
+                    className: "h-5 w-full",
+                  },
+                  h,
+                ),
+                Skeleton.view(
+                  {
+                    animationType: "pulse",
+                    attributes: [h.Id("skeleton-pulse"), h.AriaHidden(true)],
+                    className: "h-5 w-4/5",
+                  },
+                  h,
+                ),
+                Skeleton.view(
+                  {
+                    animationType: "none",
+                    attributes: [h.Id("skeleton-none"), h.AriaHidden(true)],
+                    className: "h-5 w-3/5",
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Shape、radius 与窄容器",
+          [
+            h.div(
+              [h.Class("flex max-w-xs items-center gap-4")],
+              [
+                Skeleton.view(
+                  {
+                    attributes: [h.Id("skeleton-avatar"), h.AriaHidden(true)],
+                    className: "size-14 shrink-0 rounded-full",
+                  },
+                  h,
+                ),
+                h.div(
+                  [h.Class("grid min-w-0 flex-1 gap-2")],
+                  [
+                    Skeleton.view(
+                      {
+                        attributes: [h.AriaHidden(true)],
+                        className: "h-4 w-full rounded-sm",
+                      },
+                      h,
+                    ),
+                    Skeleton.view(
+                      {
+                        attributes: [h.AriaHidden(true)],
+                        className: "h-4 w-2/3 rounded-2xl",
+                      },
+                      h,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =>
   h.section(
     [],
@@ -958,6 +1644,14 @@ export const partView = <Message>(
     return fieldErrorPageView(config, h);
   } else if (slug === kbdMetadata.slug) {
     return kbdPageView(h);
+  } else if (slug === badgeMetadata.slug) {
+    return badgePageView(h);
+  } else if (slug === chipMetadata.slug) {
+    return chipPageView(config, h);
+  } else if (slug === cardMetadata.slug) {
+    return cardPageView(h);
+  } else if (slug === skeletonMetadata.slug) {
+    return skeletonPageView(config, h);
   } else {
     return missingPartView(slug, h);
   }

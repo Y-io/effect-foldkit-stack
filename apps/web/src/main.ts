@@ -1,4 +1,4 @@
-import { Array, Effect, Match as M, Option, Schema as S, pipe } from "effect";
+import { Array, Effect, Match as M, Number, Option, Schema as S, pipe } from "effect";
 import { Command, Runtime } from "foldkit";
 import { Document, Html, HtmlBuilder } from "foldkit/html";
 import { m } from "foldkit/message";
@@ -117,6 +117,8 @@ export const Model = S.Struct({
   transitionLog: S.Array(S.String),
   isSignedIn: S.Boolean,
   fieldExampleState: ComponentDocs.FieldExampleState,
+  recordedChipActionCount: S.Int,
+  skeletonExampleState: ComponentDocs.SkeletonExampleState,
 });
 export type Model = typeof Model.Type;
 
@@ -141,6 +143,10 @@ export const GotUiShowcaseMessage = m("GotUiShowcaseMessage", {
 export const SelectedFieldExampleState = m("SelectedFieldExampleState", {
   state: ComponentDocs.FieldExampleState,
 });
+export const RecordedChipAction = m("RecordedChipAction");
+export const SelectedSkeletonExampleState = m("SelectedSkeletonExampleState", {
+  state: ComponentDocs.SkeletonExampleState,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -158,6 +164,8 @@ export const Message = S.Union([
   GotCounterMessage,
   GotUiShowcaseMessage,
   SelectedFieldExampleState,
+  RecordedChipAction,
+  SelectedSkeletonExampleState,
 ]);
 export type Message = typeof Message.Type;
 
@@ -215,6 +223,8 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     transitionLog: [describeTransition(Transition.coldLoad(route))],
     isSignedIn: false,
     fieldExampleState: "Helper",
+    recordedChipActionCount: 0,
+    skeletonExampleState: "Loading",
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -316,6 +326,11 @@ export const update = (model: Model, message: Message): UpdateReturn =>
 
       SelectedFieldExampleState: ({ state }) => [
         evo(model, { fieldExampleState: () => state }),
+        [],
+      ],
+      RecordedChipAction: () => [evo(model, { recordedChipActionCount: Number.increment }), []],
+      SelectedSkeletonExampleState: ({ state }) => [
+        evo(model, { skeletonExampleState: () => state }),
         [],
       ],
     }),
@@ -1115,6 +1130,10 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
           {
             fieldExampleState: model.fieldExampleState,
             onFieldExampleStateChange: (state) => SelectedFieldExampleState({ state }),
+            recordedChipActionCount: model.recordedChipActionCount,
+            onRecordChipAction: RecordedChipAction(),
+            skeletonExampleState: model.skeletonExampleState,
+            onSkeletonExampleStateChange: (state) => SelectedSkeletonExampleState({ state }),
           },
           h,
         ),

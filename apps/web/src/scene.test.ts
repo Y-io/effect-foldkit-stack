@@ -22,6 +22,8 @@ const modelOn = (route: Model["route"]): Model =>
     transitionLog: ["cold load"],
     isSignedIn: false,
     fieldExampleState: "Helper",
+    recordedChipActionCount: 0,
+    skeletonExampleState: "Loading",
   });
 
 describe("application view", () => {
@@ -232,6 +234,64 @@ describe("application view", () => {
     );
   });
 
+  test("renders the Badge Parts page without inventing status behavior", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "badge" }))),
+      expect(role("heading", { level: 1, name: "Badge" })).toExist(),
+      expect(role("status", { name: "3 条未读通知" })).toExist(),
+      expect(text("3")).toExist(),
+      expect(text("New")).toExist(),
+    );
+  });
+
+  test("keeps Chip actions in the caller's Message flow", () => {
+    const recordAction = role("button", { name: "记录 TypeScript 标签操作" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "chip" }))),
+      expect(role("heading", { level: 1, name: "Chip" })).toExist(),
+      expect(text("TypeScript")).toExist(),
+      expect(recordAction).toExist(),
+      expect(text("已记录标签操作 0 次")).toExist(),
+      click(recordAction),
+      expect(text("已记录标签操作 1 次")).toExist(),
+    );
+  });
+
+  test("renders Card anatomy with caller-owned landmark and heading semantics", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "card" }))),
+      expect(role("heading", { level: 1, name: "Card" })).toExist(),
+      expect(role("region", { name: "项目摘要卡片" })).toExist(),
+      expect(role("heading", { level: 3, name: "项目状态" })).toExist(),
+      expect(text("调用方拥有 Card 内的嵌套内容与语义。")).toExist(),
+      expect(text("上次更新：今天 09:30")).toExist(),
+    );
+  });
+
+  test("renders Skeleton only from the caller's external loading fact", () => {
+    const loadingRegion = role("region", { name: "资料加载示例" });
+    const showLoaded = role("button", { name: "显示已加载内容" });
+    const showLoading = role("button", { name: "重新加载" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "skeleton" }))),
+      expect(role("heading", { level: 1, name: "Skeleton" })).toExist(),
+      expect(loadingRegion).toHaveAttr("aria-busy", "true"),
+      expect(text("资料已加载")).toBeAbsent(),
+      click(showLoaded),
+      expect(loadingRegion).toHaveAttr("aria-busy", "false"),
+      expect(text("资料已加载")).toExist(),
+      click(showLoading),
+      expect(loadingRegion).toHaveAttr("aria-busy", "true"),
+      expect(text("资料已加载")).toBeAbsent(),
+    );
+  });
+
   test("browses component documentation by catalog, phase, class, and status", () => {
     scene(
       { update, view },
@@ -261,6 +321,10 @@ describe("application view", () => {
       expect(role("link", { name: "ErrorMessage" })).toExist(),
       expect(role("link", { name: "FieldError" })).toExist(),
       expect(role("link", { name: "Kbd" })).toExist(),
+      expect(role("link", { name: "Badge" })).toExist(),
+      expect(role("link", { name: "Chip" })).toExist(),
+      expect(role("link", { name: "Card" })).toExist(),
+      expect(role("link", { name: "Skeleton" })).toExist(),
     );
   });
 

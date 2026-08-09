@@ -279,6 +279,9 @@ test("projects light and dark HeroUI tokens for every field semantic Part", asyn
 
   for (const visualCase of cases) {
     await page.goto(`/components/parts/${visualCase.path}`);
+    if (visualCase.path === "field-error") {
+      await page.getByRole("button", { name: "显示字段错误" }).click();
+    }
     const sample = visualCase.locate();
     const light = await sample.evaluate((element) => {
       const style = getComputedStyle(element);
@@ -291,6 +294,187 @@ test("projects light and dark HeroUI tokens for every field semantic Part", asyn
     });
     expect(dark).not.toBe(light);
   }
+});
+
+test("projects Badge color, variant, size, placement, and theme without owning semantics", async ({
+  page,
+}) => {
+  await page.goto("/components/parts/badge");
+
+  const callerStatus = page.getByRole("status", { name: "3 条未读通知" });
+  await expect(callerStatus).toHaveText("3");
+
+  const softAccent = page.getByLabel("Accent soft Badge");
+  const primarySuccess = page.getByLabel("Success primary Badge");
+  expect(
+    await softAccent.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(await primarySuccess.evaluate((element) => getComputedStyle(element).backgroundColor));
+
+  const smallBadge = page.getByLabel("Badge top-right small");
+  const largeBadge = page.getByLabel("Badge bottom-left large");
+  expect(
+    await largeBadge.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeGreaterThan(await smallBadge.evaluate((element) => element.getBoundingClientRect().height));
+  await expect(smallBadge).toHaveCSS("position", "absolute");
+  expect(await smallBadge.evaluate((element) => getComputedStyle(element).transform)).not.toBe(
+    "none",
+  );
+
+  const placementCases = [
+    { placement: "top-right", badgeLabel: "Badge top-right small", isRight: true, isBottom: false },
+    { placement: "top-left", badgeLabel: "Badge top-left medium", isRight: false, isBottom: false },
+    {
+      placement: "bottom-right",
+      badgeLabel: "Badge bottom-right medium",
+      isRight: true,
+      isBottom: true,
+    },
+    {
+      placement: "bottom-left",
+      badgeLabel: "Badge bottom-left large",
+      isRight: false,
+      isBottom: true,
+    },
+  ];
+  for (const placementCase of placementCases) {
+    const anchor = page.getByLabel(`Badge ${placementCase.placement} anchor`);
+    const badge = page.getByLabel(placementCase.badgeLabel);
+    const anchorBox = await anchor.boundingBox();
+    const badgeBox = await badge.boundingBox();
+    expect(anchorBox).not.toBeNull();
+    expect(badgeBox).not.toBeNull();
+    if (anchorBox !== null && badgeBox !== null) {
+      const crossesHorizontalEdge = placementCase.isRight
+        ? badgeBox.x + badgeBox.width > anchorBox.x + anchorBox.width
+        : badgeBox.x < anchorBox.x;
+      const crossesVerticalEdge = placementCase.isBottom
+        ? badgeBox.y + badgeBox.height > anchorBox.y + anchorBox.height
+        : badgeBox.y < anchorBox.y;
+      expect(crossesHorizontalEdge).toBe(true);
+      expect(crossesVerticalEdge).toBe(true);
+    }
+  }
+
+  const lightBackground = await softAccent.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await softAccent.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightBackground);
+});
+
+test("keeps Chip actions caller-owned while covering visual variants and theme", async ({
+  page,
+}) => {
+  await page.goto("/components/parts/chip");
+
+  const action = page.getByRole("button", { name: "记录 TypeScript 标签操作" });
+  await action.focus();
+  await expect(action).toBeFocused();
+  await action.press("Enter");
+  await expect(page.getByText("已记录标签操作 1 次", { exact: true })).toBeVisible();
+
+  const defaultChip = page.getByLabel("Default secondary Chip");
+  const accentChip = page.getByLabel("Accent primary Chip");
+  expect(
+    await defaultChip.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(await accentChip.evaluate((element) => getComputedStyle(element).backgroundColor));
+
+  const smallChip = page.getByLabel("Small Chip");
+  const largeChip = page.getByLabel("Large long-content Chip");
+  expect(
+    await largeChip.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeGreaterThan(await smallChip.evaluate((element) => element.getBoundingClientRect().height));
+  const squareChip = page.getByLabel("Medium square Chip");
+  await expect(squareChip).toHaveCSS("border-radius", "4px");
+
+  const lightBackground = await defaultChip.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await defaultChip.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightBackground);
+});
+
+test("projects Card anatomy, surface variants, wrapping, radius, and theme", async ({ page }) => {
+  await page.goto("/components/parts/card");
+
+  const semanticCard = page.getByRole("region", { name: "项目摘要卡片" });
+  await expect(semanticCard.getByRole("heading", { level: 3, name: "项目状态" })).toBeVisible();
+  await expect(semanticCard.getByText("视觉映射已确认", { exact: true })).toBeVisible();
+
+  const defaultCard = page.getByRole("region", { name: "Default Card" });
+  const secondaryCard = page.getByRole("region", { name: "Secondary Card" });
+  const tertiaryCard = page.getByRole("region", { name: "Tertiary Card" });
+  const transparentCard = page.getByRole("region", { name: "Transparent Card" });
+  const backgrounds = await Promise.all(
+    [defaultCard, secondaryCard, tertiaryCard, transparentCard].map((card) =>
+      card.evaluate((element) => getComputedStyle(element).backgroundColor),
+    ),
+  );
+  expect(new Set(backgrounds).size).toBe(4);
+
+  const longCard = page.getByRole("region", { name: "Long-content Card" });
+  await expect(longCard).toHaveCSS("border-radius", "4px");
+  const longDescription = longCard.getByText(/较长的 Card 描述/);
+  await expect(longDescription).toHaveCSS("white-space", "normal");
+  expect(
+    await longDescription.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+
+  const lightBackground = await defaultCard.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await defaultCard.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightBackground);
+});
+
+test("renders Skeleton only from external loading state and respects motion preferences", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/parts/skeleton");
+
+  const example = page.getByRole("region", { name: "资料加载示例" });
+  await expect(example).toHaveAttribute("aria-busy", "true");
+  await expect(page.locator("#skeleton-controlled")).toHaveCount(1);
+  await page.getByRole("button", { name: "显示已加载内容" }).click();
+  await expect(example).toHaveAttribute("aria-busy", "false");
+  await expect(page.locator("#skeleton-controlled")).toHaveCount(0);
+  await expect(example.getByText("资料已加载", { exact: true })).toBeVisible();
+
+  const shimmer = page.locator("#skeleton-shimmer");
+  const pulse = page.locator("#skeleton-pulse");
+  const none = page.locator("#skeleton-none");
+  expect(
+    await shimmer.evaluate((element) => getComputedStyle(element, "::after").animationDuration),
+  ).not.toBe("0s");
+  expect(await pulse.evaluate((element) => getComputedStyle(element).animationDuration)).not.toBe(
+    "0s",
+  );
+  await expect(none).toHaveCSS("animation-duration", "0s");
+
+  const avatar = page.locator("#skeleton-avatar");
+  expect(
+    await avatar.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius)),
+  ).toBeGreaterThanOrEqual(28);
+  const lightBackground = await avatar.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(await avatar.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    lightBackground,
+  );
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    await shimmer.evaluate((element) => getComputedStyle(element, "::after").animationDuration),
+  ).toBe("0s");
+  await expect(pulse).toHaveCSS("animation-duration", "0s");
 });
 
 test("browses and filters the component catalog through public routes", async ({ page }) => {

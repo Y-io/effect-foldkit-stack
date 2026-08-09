@@ -1,4 +1,7 @@
+export { default as Badge } from "./badge";
 export { default as Button } from "./button";
+export { default as Card } from "./card";
+export { default as Chip } from "./chip";
 export { default as Combobox } from "./combobox";
 export { default as Dialog } from "./dialog";
 export { default as Description } from "./description";
@@ -10,5 +13,6 @@ export { default as InputGroup } from "./input-group";
 export { default as Kbd } from "./kbd";
 export { default as Label } from "./label";
 export { default as Separator } from "./separator";
+export { default as Skeleton } from "./skeleton";
 export { default as Surface } from "./surface";
 export { default as Typography } from "./typography";
