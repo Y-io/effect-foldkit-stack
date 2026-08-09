@@ -58,7 +58,7 @@ test("从主 Input 投射 readonly、invalid 与 focus 外观而不改变 standa
   expect(await plainSurface.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
     plainShadow,
   );
-  expect(await plainInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+  expect(await plainInput.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
     inputShadowBeforeFocus,
   );
 
@@ -73,8 +73,16 @@ test("从主 Input 投射 readonly、invalid 与 focus 外观而不改变 standa
   expect(await invalidSurface.evaluate((element) => getComputedStyle(element).outlineColor)).toBe(
     invalidOutlineColor,
   );
-  expect(await invalidInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+  expect(await invalidInput.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
     invalidInputShadowBeforeFocus,
+  );
+
+  const standaloneShadowBeforeFocus = await standaloneInput.evaluate(
+    (element) => getComputedStyle(element).boxShadow,
+  );
+  await standaloneInput.focus();
+  expect(await standaloneInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
+    standaloneShadowBeforeFocus,
   );
 
   expect(

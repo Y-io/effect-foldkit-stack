@@ -76,7 +76,6 @@
     outline: none;
   }
 
-  .pkg-ui-input-group > [data-slot="input-group-input"]:focus-visible,
   .pkg-ui-input-group > .pkg-ui-input-group-action:focus-visible {
     box-shadow: inset 0 0 0 2px var(--focus);
   }
