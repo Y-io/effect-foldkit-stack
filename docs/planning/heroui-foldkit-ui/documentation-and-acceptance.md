@@ -99,18 +99,18 @@ examples:
 
 ### 3.1 必填字段
 
-| 字段 | 约束 |
-| --- | --- |
-| `name` / `title` / `slug` | 唯一组件身份与中文展示名 |
-| `catalog` | 只能是 `parts` 或 `standalone` |
-| `phase` | 只能是 1 到 7，与组件矩阵一致 |
-| `behaviorClass` | 只能是 A、B 或 C |
-| `behaviorAuthority` | 指明复用的 Foldkit 原语、原生平台语义或待新增 Foldkit-native 边界 |
-| `status` | `planned`、`contract-reviewed`、`implemented`、`verified` 之一 |
-| `family` | form-control、overlay、navigation、collection-selection、disclosure、feedback、data 等稳定功能族 |
-| `dependencies` | 只列真实运行或视觉协议依赖，不用阶段顺序代替依赖图 |
-| `heroUi` / `foldkit` | 可追溯到视觉来源与行为来源 |
-| `states` / `examples` | 驱动页面目录和验收矩阵 |
+| 字段                      | 约束                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `name` / `title` / `slug` | 唯一组件身份与中文展示名                                                                         |
+| `catalog`                 | 只能是 `parts` 或 `standalone`                                                                   |
+| `phase`                   | 只能是 1 到 7，与组件矩阵一致                                                                    |
+| `behaviorClass`           | 只能是 A、B 或 C                                                                                 |
+| `behaviorAuthority`       | 指明复用的 Foldkit 原语、原生平台语义或待新增 Foldkit-native 边界                                |
+| `status`                  | `planned`、`contract-reviewed`、`implemented`、`verified` 之一                                   |
+| `family`                  | form-control、overlay、navigation、collection-selection、disclosure、feedback、data 等稳定功能族 |
+| `dependencies`            | 只列真实运行或视觉协议依赖，不用阶段顺序代替依赖图                                               |
+| `heroUi` / `foldkit`      | 可追溯到视觉来源与行为来源                                                                       |
+| `states` / `examples`     | 驱动页面目录和验收矩阵                                                                           |
 
 `publicParts` 与 `slots` 在适用时必填。A/B/C 不是实现状态，`verified` 也不能反推行为分类。
 
@@ -188,15 +188,15 @@ examples:
 
 ## 7. 七阶段的专项验收重点
 
-| 阶段 | 在固定 DoD 之外重点证明 |
-| --- | --- |
-| 1 | visual protocol、token、主题、state attribute 和 leaf anatomy 可稳定复用；Avatar fallback 与 ScrollShadow observer 无第二权威 |
-| 2 | Field Anatomy、Description Channel、form validation、disabled/readonly/invalid 传播；Input/InputGroup 样板成立 |
-| 3 | overlay layer、dismiss、focus scope/restore、modal background、toast region 与 disclosure 协调 |
-| 4 | collection identity、selection、typeahead、roving/active focus、有界 item renderer；Select 明确映射 Listbox |
-| 5 | 格式化、步进、清除、分段焦点、粘贴和数值边界 |
-| 6 | locale 日期/时间分段、范围选择、颜色通道与二维键盘/指针模型 |
-| 7 | Table 的 selection、sort、行列导航、virtual/overflow 边界和 ARIA table/grid 契约 |
+| 阶段 | 在固定 DoD 之外重点证明                                                                                                       |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1    | visual protocol、token、主题、state attribute 和 leaf anatomy 可稳定复用；Avatar fallback 与 ScrollShadow observer 无第二权威 |
+| 2    | Field Anatomy、Description Channel、form validation、disabled/readonly/invalid 传播；Input/InputGroup 样板成立                |
+| 3    | overlay layer、dismiss、focus scope/restore、modal background、toast region 与 disclosure 协调                                |
+| 4    | collection identity、selection、typeahead、roving/active focus、有界 item renderer；Select 明确映射 Listbox                   |
+| 5    | 格式化、步进、清除、分段焦点、粘贴和数值边界                                                                                  |
+| 6    | locale 日期/时间分段、范围选择、颜色通道与二维键盘/指针模型                                                                   |
+| 7    | Table 的 selection、sort、行列导航、virtual/overflow 边界和 ARIA table/grid 契约                                              |
 
 ## 8. 现有 showcase 的迁移边界
 

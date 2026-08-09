@@ -78,11 +78,11 @@ Standalone 是可直接使用的完整展示、输入、选择、导航或反馈
 
 ## 5. A/B/C 行为标记
 
-| 标记 | 定义 | 实施边界 |
-| --- | --- | --- |
-| A：视觉映射 | 现有 Foldkit 或原生平台行为已经满足目标，只需 HeroUI 视觉投射 | 不新增或修改行为状态机；证明行为、Message、键盘和 ARIA 未被视觉层改变 |
-| B：契约适配 | 复用现有 Foldkit Behavior Authority，但需选择正确原语并适配 API、anatomy、slot 或语义契约 | Foldkit 仍是行为真相源；必须记录两侧差异、适配规则和最终 Foldkit 语义 |
-| C：新增行为 | Foldkit 目前没有足够的行为原语，必须新增 Foldkit-native Behavior Authority | 实现前先评审 `Model`、`Message`、`update`、`view`、键盘、焦点、ARIA 和 `OutMessage` 设计 |
+| 标记        | 定义                                                                                      | 实施边界                                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| A：视觉映射 | 现有 Foldkit 或原生平台行为已经满足目标，只需 HeroUI 视觉投射                             | 不新增或修改行为状态机；证明行为、Message、键盘和 ARIA 未被视觉层改变                    |
+| B：契约适配 | 复用现有 Foldkit Behavior Authority，但需选择正确原语并适配 API、anatomy、slot 或语义契约 | Foldkit 仍是行为真相源；必须记录两侧差异、适配规则和最终 Foldkit 语义                    |
+| C：新增行为 | Foldkit 目前没有足够的行为原语，必须新增 Foldkit-native Behavior Authority                | 实现前先评审 `Model`、`Message`、`update`、`view`、键盘、焦点、ARIA 和 `OutMessage` 设计 |
 
 标记描述工作性质，不代表优先级、复杂度或组件目录。一个 Parts 可以是 C，一个 Standalone 也可以是 A。
 
@@ -90,15 +90,15 @@ Standalone 是可直接使用的完整展示、输入、选择、导航或反馈
 
 主路线固定为恰好七个依赖递进阶段。不存在单独的“全库收口”阶段；文档、Scene、键盘/ARIA、视觉和主题验收是每一阶段的固定完成条件。
 
-| 阶段 | 组件范围 | 放在此阶段的原因 | 主要行为缺口 |
-| --- | --- | --- | --- |
-| 1 | 视觉协议与视觉叶子组件，共 21 个 | 先验证 token、主题、状态属性、anatomy 和最小视图投射方式，为后续所有组件提供视觉基线 | 以 A 为主；Avatar、ScrollShadow 为 B |
-| 2 | 基础操作与表单，共 16 个 | 建立按钮、字段、校验、分组和表单接线，供 overlay、collection 和复合组件复用 | A/B 混合；CheckboxGroup 为 C |
-| 3 | Disclosure、Overlay 与反馈，共 9 个 | 先稳定触发器、浮层、焦点进出、关闭和反馈生命周期 | A/B 混合；DisclosureGroup、Accordion、AlertDialog 为 C |
-| 4 | Collection、Selection 与 Navigation，共 18 个 | 为菜单、选择器、标签、切换组及后续 Table 建立统一集合与选择契约 | A/B/C 并存；ListBox、组合选择和组导航是重点 |
-| 5 | 数值、搜索与短结构输入，共 4 个 | 在较小范围验证新的输入状态机、格式化、清除和分段交互 | NumberField、SearchField、InputOTP 为 C；Slider 为 B |
-| 6 | 日期、时间与颜色，共 13 个 | 在基础表单、overlay、collection 和短结构输入稳定后处理专业领域状态机 | Calendar/ColorSwatch 为 A，部分复合为 B，多数分段/范围/颜色交互为 C |
-| 7 | 复杂数据，共 1 个 | Table 依赖前述 collection、selection、navigation、overlay 和 form 能力，最后独立收敛 | Table 为 C，不得当成纯样式工作 |
+| 阶段 | 组件范围                                      | 放在此阶段的原因                                                                     | 主要行为缺口                                                        |
+| ---- | --------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| 1    | 视觉协议与视觉叶子组件，共 21 个              | 先验证 token、主题、状态属性、anatomy 和最小视图投射方式，为后续所有组件提供视觉基线 | 以 A 为主；Avatar、ScrollShadow 为 B                                |
+| 2    | 基础操作与表单，共 16 个                      | 建立按钮、字段、校验、分组和表单接线，供 overlay、collection 和复合组件复用          | A/B 混合；CheckboxGroup 为 C                                        |
+| 3    | Disclosure、Overlay 与反馈，共 9 个           | 先稳定触发器、浮层、焦点进出、关闭和反馈生命周期                                     | A/B 混合；DisclosureGroup、Accordion、AlertDialog 为 C              |
+| 4    | Collection、Selection 与 Navigation，共 18 个 | 为菜单、选择器、标签、切换组及后续 Table 建立统一集合与选择契约                      | A/B/C 并存；ListBox、组合选择和组导航是重点                         |
+| 5    | 数值、搜索与短结构输入，共 4 个               | 在较小范围验证新的输入状态机、格式化、清除和分段交互                                 | NumberField、SearchField、InputOTP 为 C；Slider 为 B                |
+| 6    | 日期、时间与颜色，共 13 个                    | 在基础表单、overlay、collection 和短结构输入稳定后处理专业领域状态机                 | Calendar/ColorSwatch 为 A，部分复合为 B，多数分段/范围/颜色交互为 C |
+| 7    | 复杂数据，共 1 个                             | Table 依赖前述 collection、selection、navigation、overlay 和 form 能力，最后独立收敛 | Table 为 C，不得当成纯样式工作                                      |
 
 ### 6.1 阶段 1：视觉协议与视觉叶子组件
 
