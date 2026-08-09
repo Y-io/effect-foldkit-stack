@@ -6,6 +6,7 @@ import * as Counter from "./counter";
 import { Model, update, view } from "./main";
 import {
   ComponentPartRoute,
+  ComponentStandaloneRoute,
   ComponentsIndexRoute,
   ExampleRoute,
   HomeRoute,
@@ -24,6 +25,8 @@ const modelOn = (route: Model["route"]): Model =>
     fieldExampleState: "Helper",
     recordedChipActionCount: 0,
     skeletonExampleState: "Loading",
+    emptyStateRetryCount: 0,
+    emptyStateExampleState: "Empty",
   });
 
 describe("application view", () => {
@@ -272,6 +275,42 @@ describe("application view", () => {
     );
   });
 
+  test("keeps EmptyState primary and secondary actions in the caller flow", () => {
+    const retrySync = role("button", { name: "重试同步" });
+    const emptyState = role("region", { name: "同步结果为空" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "empty-state" }))),
+      expect(role("heading", { level: 1, name: "EmptyState" })).toExist(),
+      expect(emptyState).toExist(),
+      expect(retrySync).toExist(),
+      expect(role("link", { name: "查看同步帮助" })).toHaveAttr("href", "/examples/routing"),
+      expect(text("已请求同步 0 次")).toExist(),
+      click(retrySync),
+      expect(emptyState).toBeAbsent(),
+      expect(text("已同步项目：Alpha")).toExist(),
+      expect(text("已请求同步 1 次")).toExist(),
+      click(role("button", { name: "显示空状态" })),
+      expect(emptyState).toExist(),
+      expect(text("暂无归档项目")).toExist(),
+    );
+  });
+
+  test("uses caller-selected alert and status semantics for Alert", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "alert" }))),
+      expect(role("heading", { level: 1, name: "Alert" })).toExist(),
+      expect(role("alert", { name: "无法连接" })).toExist(),
+      expect(text("请检查网络后重试。")).toExist(),
+      expect(role("status", { name: "配置已保存" })).toExist(),
+      expect(text("更改已同步到团队。")).toExist(),
+      expect(role("status", { name: "后台连接状态" })).toExist(),
+      expect(text("自定义指示器")).toExist(),
+    );
+  });
+
   test("renders Skeleton only from the caller's external loading fact", () => {
     const loadingRegion = role("region", { name: "资料加载示例" });
     const showLoaded = role("button", { name: "显示已加载内容" });
@@ -325,6 +364,8 @@ describe("application view", () => {
       expect(role("link", { name: "Chip" })).toExist(),
       expect(role("link", { name: "Card" })).toExist(),
       expect(role("link", { name: "Skeleton" })).toExist(),
+      expect(role("link", { name: "EmptyState" })).toExist(),
+      expect(role("link", { name: "Alert" })).toExist(),
     );
   });
 

@@ -3,8 +3,10 @@ import { fromString } from "foldkit/url";
 import { describe, expect, test } from "vitest";
 
 import {
+  ComponentStandaloneRoute,
   ComponentsIndexRoute,
   ProductId,
+  componentStandaloneRouter,
   deepRouter,
   exampleRouter,
   filesIndexRouter,
@@ -139,5 +141,12 @@ describe("route parser", () => {
     );
     expect(parse("/components?phase=8")._tag).toBe("NotFound");
     expect(parse("/components?catalog=Parts")._tag).toBe("NotFound");
+  });
+
+  test("round-trips a Standalone component detail route in its own catalog", () => {
+    const path = componentStandaloneRouter({ slug: "empty-state" });
+
+    expect(path).toBe("/components/standalone/empty-state");
+    expect(parse(path)).toStrictEqual(ComponentStandaloneRoute({ slug: "empty-state" }));
   });
 });

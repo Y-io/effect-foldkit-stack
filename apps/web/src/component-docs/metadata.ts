@@ -307,6 +307,48 @@ export const skeletonMetadata = ComponentMetadata.make({
   differences: ["不读取 CSS variable 来创建本地状态；loading 与 aria-busy 始终由外层调用方提供。"],
 });
 
+export const emptyStateMetadata = ComponentMetadata.make({
+  name: "EmptyState",
+  title: "空状态",
+  slug: "empty-state",
+  catalog: "standalone",
+  phase: 1,
+  behaviorClass: "A",
+  behaviorAuthority: "外层 empty 事实与调用方真实操作控件",
+  status: "verified",
+  family: "feedback",
+  dependencies: ["@heroui/styles/components/empty-state", "foldkit/html"],
+  anatomy: ["empty-state root", "caller title", "caller description", "caller actions"],
+  publicParts: ["view"],
+  states: ["external-empty", "primary-action", "secondary-action", "no-action"],
+  slots: ["root", "caller content"],
+  heroUi: { version: "3.2.4", module: "empty-state" },
+  foldkit: { primitive: "外层 Model、原生 heading、button、link 与 attributes" },
+  examples: ["default", "primary-secondary-actions", "no-action", "long-content", "rtl"],
+  differences: ["不保存 empty 事实；标题、描述与操作均是调用方拥有的真实内容。"],
+});
+
+export const alertMetadata = ComponentMetadata.make({
+  name: "Alert",
+  title: "提示",
+  slug: "alert",
+  catalog: "standalone",
+  phase: 1,
+  behaviorClass: "A",
+  behaviorAuthority: "原生 alert/status live-region 语义",
+  status: "verified",
+  family: "feedback",
+  dependencies: ["@heroui/styles/components/alert", "effect", "foldkit/html"],
+  anatomy: ["alert root", "indicator", "content", "title", "description"],
+  publicParts: ["view", "indicatorView", "contentView", "titleView", "descriptionView"],
+  states: ["default", "accent", "success", "warning", "danger", "alert", "status"],
+  slots: ["indicator", "content", "title", "description"],
+  heroUi: { version: "3.2.4", module: "alert" },
+  foldkit: { primitive: "原生 div、role=alert/status 与调用方 attributes" },
+  examples: ["urgent-alert", "polite-status", "statuses", "custom-content", "rtl"],
+  differences: ["不移植 React Context 或默认图标；调用方显式提供 indicator 与语义用途。"],
+});
+
 export const metadata: ReadonlyArray<ComponentMetadata> = [
   typographyMetadata,
   surfaceMetadata,
@@ -321,4 +363,6 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   chipMetadata,
   cardMetadata,
   skeletonMetadata,
+  emptyStateMetadata,
+  alertMetadata,
 ];

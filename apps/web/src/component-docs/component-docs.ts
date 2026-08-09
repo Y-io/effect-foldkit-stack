@@ -1,8 +1,10 @@
 import {
+  Alert,
   Badge,
   Card,
   Chip,
   Description,
+  EmptyState,
   ErrorMessage,
   FieldError,
   Header,
@@ -18,12 +20,15 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
   componentPartRouter,
+  componentStandaloneRouter,
   componentsIndexRouter,
   componentsPartsRouter,
   componentsStandaloneRouter,
+  routingHomeRouter,
   visualProtocolRouter,
 } from "../route";
 import {
+  alertMetadata,
   badgeMetadata,
   type BehaviorClass,
   type Catalog,
@@ -33,6 +38,7 @@ import {
   type Phase,
   type Status,
   descriptionMetadata,
+  emptyStateMetadata,
   errorMessageMetadata,
   fieldErrorMetadata,
   headerMetadata,
@@ -53,6 +59,10 @@ export type FieldExampleState = typeof FieldExampleState.Type;
 export const SkeletonExampleState = S.Literals(["Loading", "Loaded"]);
 export type SkeletonExampleState = typeof SkeletonExampleState.Type;
 
+/** EmptyState 文档示例中由外层 Model 持有的内容阶段。 */
+export const EmptyStateExampleState = S.Literals(["Empty", "Populated"]);
+export type EmptyStateExampleState = typeof EmptyStateExampleState.Type;
+
 type PartViewConfig<Message> = Readonly<{
   fieldExampleState: FieldExampleState;
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
@@ -60,6 +70,13 @@ type PartViewConfig<Message> = Readonly<{
   onRecordChipAction: Message;
   skeletonExampleState: SkeletonExampleState;
   onSkeletonExampleStateChange: (state: SkeletonExampleState) => Message;
+}>;
+
+type StandaloneViewConfig<Message> = Readonly<{
+  emptyStateExampleState: EmptyStateExampleState;
+  emptyStateRetryCount: number;
+  onEmptyStateRetry: Message;
+  onEmptyStateExampleStateChange: (state: EmptyStateExampleState) => Message;
 }>;
 
 const metadataRowView = <Message>(
@@ -1612,6 +1629,293 @@ const skeletonPageView = <Message>(
     h,
   );
 
+const emptyStateEmptyExampleView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  EmptyState.view(
+    {
+      attributes: [h.Role("region"), h.AriaLabel("同步结果为空")],
+      className:
+        "grid max-w-lg justify-items-center gap-3 rounded-3xl border border-border bg-surface px-6 py-10 text-center",
+      content: [
+        h.h3([h.Class("text-xl font-semibold text-foreground")], ["尚未同步任何项目"]),
+        h.p(
+          [h.Class("max-w-md text-sm text-muted")],
+          ["重新同步以检查最新项目，或查看帮助了解支持的数据来源。"],
+        ),
+        h.div(
+          [h.Class("flex flex-wrap justify-center gap-3")],
+          [
+            h.button(
+              [
+                h.Type("button"),
+                h.OnClick(config.onEmptyStateRetry),
+                h.Class(
+                  "rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground focus-visible:outline focus-visible:outline-2",
+                ),
+              ],
+              ["重试同步"],
+            ),
+            h.a(
+              [
+                h.Href(routingHomeRouter()),
+                h.Class(
+                  "rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground focus-visible:outline focus-visible:outline-2",
+                ),
+              ],
+              ["查看同步帮助"],
+            ),
+          ],
+        ),
+      ],
+    },
+    h,
+  );
+
+const emptyStatePopulatedExampleView = <Message>(h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [
+      h.Role("region"),
+      h.AriaLabel("同步项目结果"),
+      h.Class("rounded-2xl bg-surface-secondary p-5 text-foreground"),
+    ],
+    ["已同步项目：Alpha"],
+  );
+
+const emptyStateExampleContentView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  if (config.emptyStateExampleState === "Empty") {
+    return emptyStateEmptyExampleView(config, h);
+  } else {
+    return emptyStatePopulatedExampleView(h);
+  }
+};
+
+const emptyStatePageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    emptyStateMetadata,
+    {
+      summary: "将外层 empty 事实呈现为完整空状态，操作继续由调用方真实控件与 Message 拥有。",
+      usage: "用于列表、搜索或归档等外层已经确认无内容的场景，可组合标题、描述与操作。",
+      avoidance: "不用于读取集合、推断是否为空、保存重试次数或复制按钮与导航行为。",
+      behavior:
+        "外层 Model 决定是否渲染 EmptyState；原生 heading、button、link 与 Message 是唯一 Behavior Authority。EmptyState.view 没有 Model、Message 或状态订阅。",
+      visual:
+        "root 直接映射 HeroUI emptyStateVariants；布局、标题、描述和 actions 是调用方可审计的真实内容。",
+      api: "view 接收完整调用方 content、attributes 与 className；content 省略时保留 HeroUI 的默认空结果文案。",
+      keyboardAndFocus:
+        "root 不进入 Tab 顺序；调用方 button 与 link 保留自身 Tab、Enter、Space、焦点视觉和 Message。",
+      aria: "EmptyState 不自动添加 role 或 live region；调用方按页面结构提供 region、accessible name 与真实标题层级。",
+      examples: [
+        exampleView(
+          "主要与次要操作",
+          [
+            h.section(
+              [h.Role("region"), h.AriaLabel("同步项目示例"), h.Class("grid gap-3")],
+              [
+                emptyStateExampleContentView(config, h),
+                h.output([], [`已请求同步 ${config.emptyStateRetryCount} 次`]),
+                h.button(
+                  [h.Type("button"), h.OnClick(config.onEmptyStateExampleStateChange("Empty"))],
+                  ["显示空状态"],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "无操作、长文案、窄容器与 RTL",
+          [
+            EmptyState.view(
+              {
+                attributes: [h.Role("region"), h.AriaLabel("归档项目空状态"), h.Dir("rtl")],
+                className:
+                  "grid max-w-64 justify-items-start gap-2 rounded-2xl border border-border bg-surface p-5 text-start",
+                content: [
+                  h.h3([h.Class("font-semibold text-foreground")], ["暂无归档项目"]),
+                  h.p(
+                    [h.Class("text-sm text-muted")],
+                    ["当项目完成并归档后，它们会显示在这里；当前不需要执行任何操作。"],
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView("HeroUI 默认内容", [EmptyState.view({}, h)], h),
+      ],
+    },
+    h,
+  );
+
+const alertPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    alertMetadata,
+    {
+      summary: "按调用方用途投射原生 alert 或 status 语义，并应用 HeroUI Alert 状态视觉。",
+      usage: "用于需要即时播报或礼貌状态更新的重要消息，语义用途与视觉 status 显式分离。",
+      avoidance:
+        "不用于保存消息队列、定时关闭、复制 Toast 行为，或从 danger/success 颜色猜测播报优先级。",
+      behavior:
+        "semanticRole 直接成为原生 role=alert/status；浏览器 live-region 语义和调用方内容是唯一 Behavior Authority。组件没有 Model、Message、dismiss 或计时器。",
+      visual:
+        "status 映射 HeroUI alertVariants；indicator、content、title 与 description 映射官方 slots，并由 root descendant 样式获得状态颜色。",
+      api: "view 要求调用方显式选择 semanticRole；各 slot view 接收真实内容、attributes 与 className，不使用隐藏 Context。",
+      keyboardAndFocus:
+        "Alert anatomy 默认不进入 Tab 顺序；调用方嵌入的 link、button 等真实控件保留自身键盘与焦点行为。",
+      aria: "紧急且需要立即播报的消息使用 alert；非紧急状态更新使用 status。视觉 status 不自动决定 live-region role。",
+      examples: [
+        exampleView(
+          "紧急 alert",
+          [
+            Alert.view(
+              {
+                semanticRole: "alert",
+                status: "danger",
+                attributes: [h.AriaLabel("无法连接")],
+                content: [
+                  Alert.indicatorView({ content: [h.span([h.AriaHidden(true)], ["!"])] }, h),
+                  Alert.contentView(
+                    {
+                      content: [
+                        Alert.titleView({ content: "无法连接" }, h),
+                        Alert.descriptionView({ content: "请检查网络后重试。" }, h),
+                      ],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "礼貌 status 与自定义 indicator",
+          [
+            Alert.view(
+              {
+                semanticRole: "status",
+                status: "success",
+                attributes: [h.AriaLabel("配置已保存")],
+                content: [
+                  Alert.indicatorView(
+                    {
+                      content: [h.span([h.AriaHidden(true)], ["自定义指示器"])],
+                    },
+                    h,
+                  ),
+                  Alert.contentView(
+                    {
+                      content: [
+                        Alert.titleView({ content: "配置已保存" }, h),
+                        Alert.descriptionView({ content: "更改已同步到团队。" }, h),
+                      ],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Status 视觉矩阵",
+          [
+            h.div(
+              [h.Class("grid gap-3")],
+              [
+                Alert.view(
+                  {
+                    semanticRole: "status",
+                    status: "default",
+                    attributes: [h.AriaLabel("Default Alert")],
+                    content: [Alert.titleView({ content: "Default" }, h)],
+                  },
+                  h,
+                ),
+                Alert.view(
+                  {
+                    semanticRole: "status",
+                    status: "accent",
+                    attributes: [h.AriaLabel("Accent Alert")],
+                    content: [Alert.titleView({ content: "Accent" }, h)],
+                  },
+                  h,
+                ),
+                Alert.view(
+                  {
+                    semanticRole: "status",
+                    status: "warning",
+                    attributes: [h.AriaLabel("Warning Alert")],
+                    content: [Alert.titleView({ content: "Warning" }, h)],
+                  },
+                  h,
+                ),
+                Alert.view(
+                  {
+                    semanticRole: "status",
+                    status: "danger",
+                    attributes: [h.AriaLabel("后台连接状态")],
+                    content: [Alert.titleView({ content: "Danger polite status" }, h)],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "长文案、窄容器与 RTL",
+          [
+            Alert.view(
+              {
+                semanticRole: "status",
+                status: "accent",
+                attributes: [h.AriaLabel("RTL 长文案 Alert"), h.Dir("rtl")],
+                className: "max-w-64",
+                content: [
+                  Alert.indicatorView({ content: [h.span([h.AriaHidden(true)], ["i"])] }, h),
+                  Alert.contentView(
+                    {
+                      content: [
+                        Alert.titleView({ content: "تم حفظ التغييرات" }, h),
+                        Alert.descriptionView(
+                          {
+                            content:
+                              "هذا نص طويل للتأكد من أن الرسالة تلتف داخل الحاوية الضيقة دون فقدان المعنى.",
+                          },
+                          h,
+                        ),
+                      ],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =>
   h.section(
     [],
@@ -1657,6 +1961,29 @@ export const partView = <Message>(
   }
 };
 
+const missingStandaloneView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =>
+  h.section(
+    [],
+    [
+      h.h1([h.Class("text-4xl font-semibold text-foreground")], ["组件文档不存在"]),
+      h.p([h.Class("mt-3 text-muted")], [`未找到 Standalone 组件：${slug}`]),
+    ],
+  );
+
+export const standaloneView = <Message>(
+  slug: string,
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  if (slug === emptyStateMetadata.slug) {
+    return emptyStatePageView(config, h);
+  } else if (slug === alertMetadata.slug) {
+    return alertPageView(h);
+  } else {
+    return missingStandaloneView(slug, h);
+  }
+};
+
 export type Filters = Readonly<{
   catalog: Option.Option<Catalog>;
   phase: Option.Option<Phase>;
@@ -1685,14 +2012,22 @@ const matchesFilters = (component: ComponentMetadata, filters: Filters): boolean
   matchesOptional(filters.behaviorClass, component.behaviorClass) &&
   matchesOptional(filters.status, component.status);
 
-const componentCardView = <Message>(component: ComponentMetadata, h: HtmlBuilder<Message>): Html =>
-  h.keyed("li")(
+const componentDetailHref = (component: ComponentMetadata): string =>
+  component.catalog === "parts"
+    ? componentPartRouter({ slug: component.slug })
+    : componentStandaloneRouter({ slug: component.slug });
+
+const componentCardView = <Message>(
+  component: ComponentMetadata,
+  h: HtmlBuilder<Message>,
+): Html => {
+  return h.keyed("li")(
     component.slug,
     [h.Class("rounded-2xl border border-border bg-surface p-5 shadow-surface")],
     [
       h.a(
         [
-          h.Href(componentPartRouter({ slug: component.slug })),
+          h.Href(componentDetailHref(component)),
           h.Class("text-xl font-semibold text-foreground underline-offset-4 hover:underline"),
         ],
         [component.name],
@@ -1706,6 +2041,7 @@ const componentCardView = <Message>(component: ComponentMetadata, h: HtmlBuilder
       ),
     ],
   );
+};
 
 export const indexView = <Message>(filters: Filters, h: HtmlBuilder<Message>): Html => {
   const visibleComponents = Array.filter(metadata, (component) =>
@@ -1941,7 +2277,7 @@ export const navigationView = <Message>(h: HtmlBuilder<Message>): Html =>
             h.keyed("a")(
               component.slug,
               [
-                h.Href(componentPartRouter({ slug: component.slug })),
+                h.Href(componentDetailHref(component)),
                 h.Class("rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface"),
               ],
               [component.name],

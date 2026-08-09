@@ -56,6 +56,7 @@ export const ComponentsIndexRoute = r("ComponentsIndex", {
 export const ComponentsPartsRoute = r("ComponentsParts");
 export const ComponentsStandaloneRoute = r("ComponentsStandalone");
 export const ComponentPartRoute = r("ComponentPart", { slug: S.String });
+export const ComponentStandaloneRoute = r("ComponentStandalone", { slug: S.String });
 export const VisualProtocolRoute = r("VisualProtocol");
 export const NotFoundRoute = r("NotFound", { path: S.String });
 
@@ -82,6 +83,7 @@ export const AppRoute = S.Union([
   ComponentsPartsRoute,
   ComponentsStandaloneRoute,
   ComponentPartRoute,
+  ComponentStandaloneRoute,
   VisualProtocolRoute,
   NotFoundRoute,
 ]);
@@ -233,6 +235,13 @@ export const componentPartRouter = pipe(
   Route.mapTo(ComponentPartRoute),
 );
 
+export const componentStandaloneRouter = pipe(
+  literal("components"),
+  slash(literal("standalone")),
+  slash(string("slug")),
+  Route.mapTo(ComponentStandaloneRoute),
+);
+
 export const componentsPartsRouter = pipe(
   literal("components"),
   slash(literal("parts")),
@@ -267,6 +276,7 @@ export const visualProtocolRouter = pipe(
 
 const routeParser = Route.oneOf(
   visualProtocolRouter,
+  componentStandaloneRouter,
   componentPartRouter,
   componentsStandaloneRouter,
   componentsPartsRouter,

@@ -477,12 +477,105 @@ test("renders Skeleton only from external loading state and respects motion pref
   await expect(pulse).toHaveCSS("animation-duration", "0s");
 });
 
+test("keeps EmptyState actions external across theme, narrow layout, and RTL", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/components/standalone/empty-state");
+
+  const actionable = page.getByRole("region", { name: "同步结果为空" });
+  const retry = page.getByRole("button", { name: "重试同步" });
+  const lightVisual = await actionable.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return `${style.color}|${style.backgroundColor}|${style.borderColor}`;
+  });
+  await retry.focus();
+  await expect(retry).toBeFocused();
+  await retry.press("Enter");
+  await expect(actionable).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "同步项目结果" })).toHaveText("已同步项目：Alpha");
+  await expect(page.getByText("已请求同步 1 次", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "显示空状态" }).click();
+  await expect(actionable).toHaveCount(1);
+  const help = page.getByRole("link", { name: "查看同步帮助" });
+  await help.focus();
+  await expect(help).toBeFocused();
+  await expect(help).toHaveAttribute("href", "/examples/routing");
+
+  const noAction = page.getByRole("region", { name: "归档项目空状态" });
+  await expect(noAction.getByRole("button")).toHaveCount(0);
+  await expect(noAction.getByRole("link")).toHaveCount(0);
+  await expect(noAction).toHaveCSS("direction", "rtl");
+  expect(
+    await noAction.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeLessThanOrEqual(256);
+  const longCopy = noAction.getByText(/当项目完成并归档后/);
+  expect(await longCopy.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+    true,
+  );
+  await expect(page.getByText("No results found", { exact: true })).toBeVisible();
+
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  const darkVisual = await actionable.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return `${style.color}|${style.backgroundColor}|${style.borderColor}`;
+  });
+  expect(darkVisual).not.toBe(lightVisual);
+});
+
+test("keeps Alert live-region purpose separate from every visual status", async ({ page }) => {
+  await page.goto("/components/standalone/alert");
+
+  const urgent = page.getByRole("alert", { name: "无法连接" });
+  const polite = page.getByRole("status", { name: "配置已保存" });
+  const dangerPolite = page.getByRole("status", { name: "后台连接状态" });
+  await expect(urgent.getByText("请检查网络后重试。", { exact: true })).toBeVisible();
+  await expect(polite.getByText("更改已同步到团队。", { exact: true })).toBeVisible();
+  const urgentVisual = `${await urgent.evaluate((element) => getComputedStyle(element).backgroundColor)}|${await urgent.getByText("无法连接", { exact: true }).evaluate((element) => getComputedStyle(element).color)}`;
+  const dangerPoliteVisual = `${await dangerPolite.evaluate((element) => getComputedStyle(element).backgroundColor)}|${await dangerPolite.getByText("Danger polite status", { exact: true }).evaluate((element) => getComputedStyle(element).color)}`;
+  expect(dangerPoliteVisual).toBe(urgentVisual);
+
+  const defaultAlert = page.getByRole("status", { name: "Default Alert" });
+  const accentAlert = page.getByRole("status", { name: "Accent Alert" });
+  const warningAlert = page.getByRole("status", { name: "Warning Alert" });
+  const titleColors = await Promise.all(
+    [
+      defaultAlert.getByText("Default", { exact: true }),
+      accentAlert.getByText("Accent", { exact: true }),
+      warningAlert.getByText("Warning", { exact: true }),
+    ].map((title) => title.evaluate((element) => getComputedStyle(element).color)),
+  );
+  expect(new Set(titleColors).size).toBe(3);
+
+  const rtlAlert = page.getByRole("status", { name: "RTL 长文案 Alert" });
+  await expect(rtlAlert).toHaveCSS("direction", "rtl");
+  expect(
+    await rtlAlert.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeLessThanOrEqual(256);
+  const rtlDescription = rtlAlert.getByText(/هذا نص طويل/);
+  expect(
+    await rtlDescription.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+
+  const lightVisual = await accentAlert.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return `${style.backgroundColor}|${style.color}`;
+  });
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  const darkVisual = await accentAlert.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return `${style.backgroundColor}|${style.color}`;
+  });
+  expect(darkVisual).not.toBe(lightVisual);
+});
+
 test("browses and filters the component catalog through public routes", async ({ page }) => {
   await page.goto("/components");
 
   await page.getByRole("link", { name: "Standalone", exact: true }).last().click();
   await expect(page).toHaveURL(/\/components\/standalone$/);
-  await expect(page.getByText("当前筛选没有组件。")).toBeVisible();
+  await expect(page.getByRole("link", { name: "EmptyState", exact: true }).last()).toBeVisible();
+  const alertLink = page.getByRole("link", { name: "Alert", exact: true }).last();
+  await expect(alertLink).toBeVisible();
+  await expect(alertLink).toHaveAttribute("href", "/components/standalone/alert");
 
   await page.getByRole("link", { name: "Parts", exact: true }).first().click();
   await expect(page).toHaveURL(/\/components\/parts$/);

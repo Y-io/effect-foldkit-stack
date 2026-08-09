@@ -64,6 +64,7 @@ const isComponentRoute = (route: AppRoute): boolean =>
   route._tag === "ComponentsParts" ||
   route._tag === "ComponentsStandalone" ||
   route._tag === "ComponentPart" ||
+  route._tag === "ComponentStandalone" ||
   route._tag === "VisualProtocol";
 
 const isCounterRoute = (route: AppRoute): boolean =>
@@ -119,6 +120,8 @@ export const Model = S.Struct({
   fieldExampleState: ComponentDocs.FieldExampleState,
   recordedChipActionCount: S.Int,
   skeletonExampleState: ComponentDocs.SkeletonExampleState,
+  emptyStateRetryCount: S.Int,
+  emptyStateExampleState: ComponentDocs.EmptyStateExampleState,
 });
 export type Model = typeof Model.Type;
 
@@ -147,6 +150,10 @@ export const RecordedChipAction = m("RecordedChipAction");
 export const SelectedSkeletonExampleState = m("SelectedSkeletonExampleState", {
   state: ComponentDocs.SkeletonExampleState,
 });
+export const RequestedEmptyStateRetry = m("RequestedEmptyStateRetry");
+export const SelectedEmptyStateExampleState = m("SelectedEmptyStateExampleState", {
+  state: ComponentDocs.EmptyStateExampleState,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -166,6 +173,8 @@ export const Message = S.Union([
   SelectedFieldExampleState,
   RecordedChipAction,
   SelectedSkeletonExampleState,
+  RequestedEmptyStateRetry,
+  SelectedEmptyStateExampleState,
 ]);
 export type Message = typeof Message.Type;
 
@@ -225,6 +234,8 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     fieldExampleState: "Helper",
     recordedChipActionCount: 0,
     skeletonExampleState: "Loading",
+    emptyStateRetryCount: 0,
+    emptyStateExampleState: "Empty",
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -331,6 +342,17 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       RecordedChipAction: () => [evo(model, { recordedChipActionCount: Number.increment }), []],
       SelectedSkeletonExampleState: ({ state }) => [
         evo(model, { skeletonExampleState: () => state }),
+        [],
+      ],
+      RequestedEmptyStateRetry: () => [
+        evo(model, {
+          emptyStateRetryCount: Number.increment,
+          emptyStateExampleState: () => "Populated",
+        }),
+        [],
+      ],
+      SelectedEmptyStateExampleState: ({ state }) => [
+        evo(model, { emptyStateExampleState: () => state }),
         [],
       ],
     }),
@@ -1137,6 +1159,17 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
           },
           h,
         ),
+      ComponentStandalone: ({ slug }) =>
+        ComponentDocs.standaloneView(
+          slug,
+          {
+            emptyStateExampleState: model.emptyStateExampleState,
+            emptyStateRetryCount: model.emptyStateRetryCount,
+            onEmptyStateRetry: RequestedEmptyStateRetry(),
+            onEmptyStateExampleStateChange: (state) => SelectedEmptyStateExampleState({ state }),
+          },
+          h,
+        ),
       VisualProtocol: () => ComponentDocs.visualProtocolView(h),
       NotFound: ({ path }) => notFoundView(path, h),
     }),
@@ -1294,6 +1327,8 @@ const routeTitle = (route: AppRoute): string => {
       onSome: (example) => `${example.title} | Foldkit Route Atlas`,
     });
   } else if (route._tag === "ComponentPart") {
+    return `${route.slug} | Components | Foldkit Route Atlas`;
+  } else if (route._tag === "ComponentStandalone") {
     return `${route.slug} | Components | Foldkit Route Atlas`;
   } else if (isComponentRoute(route)) {
     return "Components | Foldkit Route Atlas";
