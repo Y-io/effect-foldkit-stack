@@ -116,6 +116,7 @@ export const Model = S.Struct({
   uiShowcase: UiShowcase.Model,
   transitionLog: S.Array(S.String),
   isSignedIn: S.Boolean,
+  fieldExampleState: ComponentDocs.FieldExampleState,
 });
 export type Model = typeof Model.Type;
 
@@ -137,6 +138,9 @@ export const GotCounterMessage = m("GotCounterMessage", { message: Counter.Messa
 export const GotUiShowcaseMessage = m("GotUiShowcaseMessage", {
   message: UiShowcase.Message,
 });
+export const SelectedFieldExampleState = m("SelectedFieldExampleState", {
+  state: ComponentDocs.FieldExampleState,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -153,6 +157,7 @@ export const Message = S.Union([
   ClickedSignOut,
   GotCounterMessage,
   GotUiShowcaseMessage,
+  SelectedFieldExampleState,
 ]);
 export type Message = typeof Message.Type;
 
@@ -209,6 +214,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     uiShowcase: UiShowcase.init(),
     transitionLog: [describeTransition(Transition.coldLoad(route))],
     isSignedIn: false,
+    fieldExampleState: "Helper",
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -307,6 +313,11 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           ),
         ];
       },
+
+      SelectedFieldExampleState: ({ state }) => [
+        evo(model, { fieldExampleState: () => state }),
+        [],
+      ],
     }),
   );
 
@@ -1098,7 +1109,15 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
           },
           h,
         ),
-      ComponentPart: ({ slug }) => ComponentDocs.partView(slug, h),
+      ComponentPart: ({ slug }) =>
+        ComponentDocs.partView(
+          slug,
+          {
+            fieldExampleState: model.fieldExampleState,
+            onFieldExampleStateChange: (state) => SelectedFieldExampleState({ state }),
+          },
+          h,
+        ),
       VisualProtocol: () => ComponentDocs.visualProtocolView(h),
       NotFound: ({ path }) => notFoundView(path, h),
     }),

@@ -1,0 +1,11 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/field-error.css" layer(components);
+
+@layer components {
+  /* NOTE: Tailwind omits HeroUI easing tokens when no matching utility is generated. */
+  .field-error {
+    --ease-out: ease-out;
+    --ease-smooth: ease;
+  }
+}

@@ -1,5 +1,5 @@
 import { Option } from "effect";
-import { expect, given, role, scene, text } from "foldkit/scene";
+import { click, expect, given, role, scene, text } from "foldkit/scene";
 import { describe, test } from "vitest";
 
 import * as Counter from "./counter";
@@ -21,6 +21,7 @@ const modelOn = (route: Model["route"]): Model =>
     uiShowcase: UiShowcase.init(),
     transitionLog: ["cold load"],
     isSignedIn: false,
+    fieldExampleState: "Helper",
   });
 
 describe("application view", () => {
@@ -120,6 +121,117 @@ describe("application view", () => {
     );
   });
 
+  test("renders the Label Parts page with a native field relationship", () => {
+    const requiredInput = role("textbox", { name: "必填项目" });
+    const invalidInput = role("textbox", { name: "无效项目" });
+    const disabledInput = role("textbox", { name: "禁用项目" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "label" }))),
+      expect(role("heading", { level: 1, name: "Label" })).toExist(),
+      expect(role("textbox", { name: "项目名称" })).toExist(),
+      expect(requiredInput).toHaveAttr("required", "true"),
+      expect(invalidInput).toHaveAttr("aria-invalid", "true"),
+      expect(disabledInput).toHaveAttr("disabled", "true"),
+    );
+  });
+
+  test("renders the Description Parts page with a stable description relationship", () => {
+    const workspaceSlug = role("textbox", { name: "工作区标识" });
+    const validating = role("button", { name: "显示校验中" });
+    const errors = role("button", { name: "显示错误" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "description" }))),
+      expect(role("heading", { level: 1, name: "Description" })).toExist(),
+      expect(workspaceSlug).toHaveAttr(
+        "aria-describedby",
+        "description-workspace-slug-description",
+      ),
+      expect(workspaceSlug).toHaveAccessibleDescription("请输入唯一的工作区标识。"),
+      expect(text("请输入唯一的工作区标识。")).toHaveId("description-workspace-slug-description"),
+      click(validating),
+      expect(workspaceSlug).toHaveAccessibleDescription("正在检查标识是否可用。"),
+      expect(workspaceSlug).toHaveAttr(
+        "aria-describedby",
+        "description-workspace-slug-description",
+      ),
+      click(errors),
+      expect(workspaceSlug).toHaveAccessibleDescription("此工作区标识已被使用。"),
+      expect(workspaceSlug).toHaveAttr("aria-invalid", "true"),
+      expect(workspaceSlug).toHaveAttr(
+        "aria-describedby",
+        "description-workspace-slug-description",
+      ),
+      expect(role("textbox", { name: "团队名称" })).toHaveAccessibleDescription(
+        "这会显示在团队主页。",
+      ),
+      expect(text("这会显示在团队主页。")).toHaveId("description-team-name"),
+    );
+  });
+
+  test("renders the Header Parts page with caller-owned heading semantics", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "header" }))),
+      expect(role("heading", { level: 1, name: "Header" })).toExist(),
+      expect(role("heading", { level: 3, name: "收件箱" })).toExist(),
+      expect(text("12 条未读消息")).toExist(),
+    );
+  });
+
+  test("renders the ErrorMessage Parts page from caller-owned validation facts", () => {
+    const accountName = role("textbox", { name: "账户名称" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "error-message" }))),
+      expect(role("heading", { level: 1, name: "ErrorMessage" })).toExist(),
+      expect(accountName).toHaveAttr("aria-invalid", "true"),
+      expect(accountName).toHaveAccessibleDescription("此名称已被使用。"),
+    );
+  });
+
+  test("renders the FieldError Parts page as a stable field description", () => {
+    const password = role("textbox", { name: "密码" });
+    const showError = role("button", { name: "显示字段错误" });
+    const hideError = role("button", { name: "隐藏字段错误" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "field-error" }))),
+      expect(role("heading", { level: 1, name: "FieldError" })).toExist(),
+      expect(password).toHaveAttr("aria-describedby", "field-error-password-description"),
+      expect(password).toHaveAccessibleDescription(""),
+      expect(showError).toExist(),
+      expect(hideError).toExist(),
+      click(showError),
+      expect(password).toHaveAttr("aria-invalid", "true"),
+      expect(password).toHaveAccessibleDescription("长度至少为 8 个字符。必须包含数字。"),
+      expect(text("长度至少为 8 个字符。必须包含数字。")).toHaveId(
+        "field-error-password-description",
+      ),
+      expect(text("长度至少为 8 个字符。必须包含数字。")).toHaveAttr("data-visible", ""),
+      click(hideError),
+      expect(password).toHaveAccessibleDescription(""),
+      expect(password).toHaveAttr("aria-describedby", "field-error-password-description"),
+    );
+  });
+
+  test("renders the Kbd Parts page with labelled combination keys and long content", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "kbd" }))),
+      expect(role("heading", { level: 1, name: "Kbd" })).toExist(),
+      expect(text("⌘")).toHaveAttr("title", "Command"),
+      expect(text("⇧")).toHaveAttr("title", "Shift"),
+      expect(text("Light 与长文本")).toExist(),
+      expect(text("COMMAND-PALETTE")).toExist(),
+    );
+  });
+
   test("browses component documentation by catalog, phase, class, and status", () => {
     scene(
       { update, view },
@@ -143,6 +255,12 @@ describe("application view", () => {
       expect(role("link", { name: "Typography" })).toExist(),
       expect(role("link", { name: "Surface" })).toExist(),
       expect(role("link", { name: "Separator" })).toExist(),
+      expect(role("link", { name: "Label" })).toExist(),
+      expect(role("link", { name: "Description" })).toExist(),
+      expect(role("link", { name: "Header" })).toExist(),
+      expect(role("link", { name: "ErrorMessage" })).toExist(),
+      expect(role("link", { name: "FieldError" })).toExist(),
+      expect(role("link", { name: "Kbd" })).toExist(),
     );
   });
 

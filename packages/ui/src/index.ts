@@ -1,8 +1,14 @@
 export { default as Button } from "./button";
 export { default as Combobox } from "./combobox";
 export { default as Dialog } from "./dialog";
+export { default as Description } from "./description";
+export { default as ErrorMessage } from "./error-message";
+export { default as FieldError } from "./field-error";
+export { default as Header } from "./header";
 export { default as Input } from "./input";
 export { default as InputGroup } from "./input-group";
+export { default as Kbd } from "./kbd";
+export { default as Label } from "./label";
 export { default as Separator } from "./separator";
 export { default as Surface } from "./surface";
 export { default as Typography } from "./typography";

@@ -1,5 +1,15 @@
-import { Separator, Surface, Typography } from "@pkg/ui";
-import { Array, Option } from "effect";
+import {
+  Description,
+  ErrorMessage,
+  FieldError,
+  Header,
+  Kbd,
+  Label,
+  Separator,
+  Surface,
+  Typography,
+} from "@pkg/ui";
+import { Array, Option, Schema as S } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
@@ -15,11 +25,26 @@ import {
   type ComponentMetadata,
   type Phase,
   type Status,
+  descriptionMetadata,
+  errorMessageMetadata,
+  fieldErrorMetadata,
+  headerMetadata,
+  kbdMetadata,
+  labelMetadata,
   metadata,
   separatorMetadata,
   surfaceMetadata,
   typographyMetadata,
 } from "./metadata";
+
+/** 字段语义示例中由外层 Form Model 持有的内容阶段。 */
+export const FieldExampleState = S.Literals(["Helper", "Validating", "Errors"]);
+export type FieldExampleState = typeof FieldExampleState.Type;
+
+type PartViewConfig<Message> = Readonly<{
+  fieldExampleState: FieldExampleState;
+  onFieldExampleStateChange: (state: FieldExampleState) => Message;
+}>;
 
 const metadataRowView = <Message>(
   term: string,
@@ -429,6 +454,478 @@ const separatorPageView = <Message>(h: HtmlBuilder<Message>): Html =>
     h,
   );
 
+const labelPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    labelMetadata,
+    {
+      summary: "保留原生 label 关系，只投射 HeroUI 字段标签视觉。",
+      usage: "用于为表单控件提供稳定的可访问名称，并呈现 required、disabled 与 invalid 外观。",
+      avoidance: "不用于替代字段状态或自动推断目标控件；for/id relationship 始终由调用方拥有。",
+      behavior:
+        "真实 label 元素及调用方提供的 for/id 是唯一 Behavior Authority。Label 没有 Model、Message 或校验状态。",
+      visual:
+        "isRequired、isDisabled 与 isInvalid 只映射 HeroUI labelVariants，不向字段复制 required、disabled 或 invalid 语义。",
+      api: "content 提供标签内容；attributes 原样落在真实 label；className 是唯一视觉扩展入口。",
+      keyboardAndFocus:
+        "Label 不进入 Tab 顺序；原生 label 激活和焦点转移行为由浏览器与目标控件决定。",
+      aria: "accessible name 来自原生 label relationship；Label 不生成 aria-label 或第二份字段状态。",
+      examples: [
+        exampleView(
+          "默认关系",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view({ content: "项目名称", attributes: [h.For("label-project-name")] }, h),
+                h.input([h.Id("label-project-name"), h.Type("text")]),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "必填与长内容",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  {
+                    content: "必填项目",
+                    isRequired: true,
+                    attributes: [h.For("label-required-project")],
+                  },
+                  h,
+                ),
+                h.input([h.Id("label-required-project"), h.Type("text"), h.Required(true)]),
+                Label.view(
+                  {
+                    content: "较长的字段标签内容仍由调用方完整拥有并保持原生关系",
+                    attributes: [h.For("label-long-project")],
+                  },
+                  h,
+                ),
+                h.input([h.Id("label-long-project"), h.Type("text")]),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Invalid 与 disabled",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  {
+                    content: "无效项目",
+                    isInvalid: true,
+                    attributes: [h.For("label-invalid-project")],
+                  },
+                  h,
+                ),
+                h.input([h.Id("label-invalid-project"), h.Type("text"), h.AriaInvalid(true)]),
+                Label.view(
+                  {
+                    content: "禁用项目",
+                    isDisabled: true,
+                    attributes: [h.For("label-disabled-project")],
+                  },
+                  h,
+                ),
+                h.input([h.Id("label-disabled-project"), h.Type("text"), h.Disabled(true)]),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const fieldExampleDescriptionContent = <Message>(
+  state: FieldExampleState,
+  h: HtmlBuilder<Message>,
+): ReadonlyArray<string | Html> => {
+  if (state === "Helper") {
+    return ["请输入唯一的工作区标识。"];
+  } else if (state === "Validating") {
+    return ["正在检查标识是否可用。"];
+  } else {
+    return [ErrorMessage.view({ content: ["此工作区标识已被使用。"] }, h)];
+  }
+};
+
+const descriptionPageView = <Message>(
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const descriptionContent = fieldExampleDescriptionContent(config.fieldExampleState, h);
+
+  return componentPageView(
+    descriptionMetadata,
+    {
+      summary: "以稳定容器呈现字段说明，并保留原生 aria-describedby relationship。",
+      usage:
+        "用于 Field Anatomy 的唯一 Description Channel，可承载 helper、validating 或 errors 内容。",
+      avoidance: "不用于创建第二个描述 id，也不根据内容自行挂载或卸载字段容器。",
+      behavior:
+        "调用方提供的 id 与控件 aria-describedby 是唯一 Behavior Authority。Description 没有 Model、Message 或内容切换状态。",
+      visual: "内容只映射 HeroUI descriptionVariants 的字号、换行与 muted token。",
+      api: "content 可为空以保留稳定容器；attributes 原样保留 id；className 只扩展视觉。",
+      keyboardAndFocus: "Description 不可聚焦，不增加键盘路径或焦点行为。",
+      aria: "Description 不自行修改控件 ARIA；调用方在真实控件上提供 aria-describedby。",
+      examples: [
+        exampleView(
+          "受控 Description Channel",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  {
+                    content: "工作区标识",
+                    attributes: [h.For("description-workspace-slug")],
+                    isInvalid: config.fieldExampleState === "Errors",
+                  },
+                  h,
+                ),
+                h.input([
+                  h.Id("description-workspace-slug"),
+                  h.Type("text"),
+                  h.AriaInvalid(config.fieldExampleState === "Errors"),
+                  h.AriaDescribedBy("description-workspace-slug-description"),
+                ]),
+                Description.view(
+                  {
+                    content: descriptionContent,
+                    attributes: [h.Id("description-workspace-slug-description")],
+                  },
+                  h,
+                ),
+                h.div(
+                  [h.Class("flex flex-wrap gap-2")],
+                  [
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onFieldExampleStateChange("Helper"))],
+                      ["显示帮助"],
+                    ),
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onFieldExampleStateChange("Validating"))],
+                      ["显示校验中"],
+                    ),
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onFieldExampleStateChange("Errors"))],
+                      ["显示错误"],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "稳定 Description Channel",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  { content: "团队名称", attributes: [h.For("description-team-input")] },
+                  h,
+                ),
+                h.input([
+                  h.Id("description-team-input"),
+                  h.Type("text"),
+                  h.AriaDescribedBy("description-team-name"),
+                ]),
+                Description.view(
+                  {
+                    content: ["这会显示在团队主页。"],
+                    attributes: [h.Id("description-team-name")],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "空容器与长内容",
+          [
+            Description.view({ content: [], attributes: [h.Id("description-stable-empty")] }, h),
+            Description.view(
+              {
+                content: [
+                  "较长的说明内容会自然换行，但不会改变 Description Channel 的 id 或字段语义所有权。",
+                ],
+                attributes: [h.Id("description-long-content")],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+};
+
+const headerPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    headerMetadata,
+    {
+      summary: "提供原生 header 容器，标题层级与内容语义继续由调用方拥有。",
+      usage: "用于集合或内容区块的标题位置，并投射 HeroUI Header 的间距与排版。",
+      avoidance: "不用于自动创建 heading level、集合状态或导航行为。",
+      behavior:
+        "原生 header 与调用方提供的 heading 是唯一 Behavior Authority。Header 没有 Model、Message 或集合状态。",
+      visual: "Header 只映射 HeroUI headerVariants 的宽度、间距、对齐、字号与 muted token。",
+      api: "content 接收完整语义内容；attributes 落在真实 header；className 只扩展视觉。",
+      keyboardAndFocus: "Header 默认不可聚焦，不增加键盘或焦点路径。",
+      aria: "组件不推断 heading level 或 landmark name；需要的语义由调用方内容与 attributes 提供。",
+      examples: [
+        exampleView(
+          "调用方拥有标题层级",
+          [
+            Header.view(
+              {
+                content: [
+                  h.h3([h.Class("text-sm font-semibold text-foreground")], ["收件箱"]),
+                  h.p([h.Class("mt-1")], ["12 条未读消息"]),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "长内容边界",
+          [
+            Header.view(
+              {
+                content: [
+                  h.h3(
+                    [h.Class("text-sm font-semibold text-foreground")],
+                    ["较长的集合标题仍保留调用方选择的语义层级并自然换行"],
+                  ),
+                ],
+                className: "max-w-xs",
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const errorMessagePageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    errorMessageMetadata,
+    {
+      summary: "只呈现调用方给出的校验事实，并投射 HeroUI 错误视觉。",
+      usage: "用于把外层 Form Model 已确定的错误内容放入既有描述关系。",
+      avoidance: "不用于运行校验、保存 errors、推断 invalid 或创建 live region。",
+      behavior:
+        "外层 Form Model、控件 aria-invalid 与 aria-describedby 是唯一 Behavior Authority。ErrorMessage 没有 Model、Message 或校验生命周期。",
+      visual:
+        "消息只映射 HeroUI errorMessageVariants 的 danger token、字号、换行与 reduced motion。",
+      api: "content 接收外部错误事实；attributes 保留 id 与调用方语义；className 只扩展视觉。",
+      keyboardAndFocus: "ErrorMessage 不可聚焦，也不移动或恢复焦点。",
+      aria: "组件不自动添加 alert、live region 或 aria-invalid；描述 relationship 由真实控件提供。",
+      examples: [
+        exampleView(
+          "外部校验事实",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  { content: "账户名称", attributes: [h.For("error-message-account")] },
+                  h,
+                ),
+                h.input([
+                  h.Id("error-message-account"),
+                  h.Type("text"),
+                  h.AriaInvalid(true),
+                  h.AriaDescribedBy("error-message-account-description"),
+                ]),
+                ErrorMessage.view(
+                  {
+                    content: ["此名称已被使用。"],
+                    attributes: [h.Id("error-message-account-description")],
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "长错误内容",
+          [
+            ErrorMessage.view(
+              {
+                content: ["错误内容可以换行，但校验事实、显示时机和描述 id 始终由外层字段拥有。"],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const fieldErrorPageView = <Message>(
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const isVisible = config.fieldExampleState === "Errors";
+
+  return componentPageView(
+    fieldErrorMetadata,
+    {
+      summary: "在稳定 Description Channel 中呈现外层 Form Model 提供的字段错误。",
+      usage:
+        "用于 Field Anatomy 中需要稳定 id 的错误容器，内容可由 helper、validating 或 errors 替换。",
+      avoidance: "不用于保存错误数组、执行校验、复制 invalid 状态或创建第二个 description。",
+      behavior:
+        "外层 Form Model 持有错误事实，控件 aria-describedby 维持 relationship。FieldError 只呈现内容，没有 Model、Message 或校验生命周期。",
+      visual: "容器只映射 HeroUI fieldErrorVariants 的 danger token、显隐过渡与 reduced motion。",
+      api: "content 可为空并由外层替换；isVisible 只接收外层已经确定的错误可见性；attributes 保留稳定 id；className 只扩展视觉。",
+      keyboardAndFocus: "FieldError 不可聚焦，也不改变字段的 Tab 或焦点行为。",
+      aria: "组件不添加 aria-invalid 或 live region；真实控件继续拥有状态与 aria-describedby。",
+      examples: [
+        exampleView(
+          "外部控制的稳定字段错误",
+          [
+            h.div(
+              [h.Class("grid max-w-sm gap-2")],
+              [
+                Label.view(
+                  {
+                    content: "密码",
+                    isInvalid: isVisible,
+                    attributes: [h.For("field-error-password")],
+                  },
+                  h,
+                ),
+                h.input([
+                  h.Id("field-error-password"),
+                  h.Type("password"),
+                  h.AriaInvalid(isVisible),
+                  h.AriaDescribedBy("field-error-password-description"),
+                ]),
+                FieldError.view(
+                  {
+                    content: isVisible ? ["长度至少为 8 个字符。必须包含数字。"] : [],
+                    isVisible,
+                    attributes: [h.Id("field-error-password-description")],
+                  },
+                  h,
+                ),
+                h.div(
+                  [h.Class("flex flex-wrap gap-2")],
+                  [
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onFieldExampleStateChange("Errors"))],
+                      ["显示字段错误"],
+                    ),
+                    h.button(
+                      [h.Type("button"), h.OnClick(config.onFieldExampleStateChange("Helper"))],
+                      ["隐藏字段错误"],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "稳定空容器",
+          [
+            FieldError.view({ content: [], attributes: [h.Id("field-error-stable-empty")] }, h),
+            Typography.view(
+              {
+                content: "外层 Field 只替换内容，不替换容器 id。",
+                type: "body-xs",
+                color: "muted",
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+};
+
+const kbdPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    kbdMetadata,
+    {
+      summary: "使用原生 kbd 与 abbr 表达键盘提示，并投射 HeroUI 视觉。",
+      usage: "用于在说明文字、菜单或操作提示中展示单键、组合键和文本键名。",
+      avoidance: "不用于监听键盘、派发 Message 或声明真实快捷键绑定。",
+      behavior:
+        "原生 kbd、abbr title 与调用方内容是唯一 Behavior Authority。Kbd 没有 Model、Message 或快捷键状态。",
+      visual:
+        "variant 映射 HeroUI kbdVariants 的 default 与 light，abbr 和 content 使用对应 slot。",
+      api: "view 提供 kbd root；abbrView 接收受限 KbdKey；contentView 接收调用方文本；各层 attributes 原样保留。",
+      keyboardAndFocus: "Kbd 是静态提示，不进入 Tab 顺序，也不拦截任何按键。",
+      aria: "真实 kbd 表达键盘输入；每个符号通过 abbr title 提供完整键名，组合键名称可由调用方 attributes 补充。",
+      examples: [
+        exampleView(
+          "组合键",
+          [
+            Kbd.view(
+              {
+                attributes: [h.AriaLabel("打开命令面板快捷键")],
+                content: [
+                  Kbd.abbrView({ keyValue: "command" }, h),
+                  Kbd.abbrView({ keyValue: "shift" }, h),
+                  Kbd.contentView({ content: "K" }, h),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "Light 与长文本",
+          [
+            Kbd.view(
+              {
+                variant: "light",
+                attributes: [h.AriaLabel("长文本快捷键提示")],
+                content: [Kbd.contentView({ content: "COMMAND-PALETTE" }, h)],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =>
   h.section(
     [],
@@ -438,13 +935,29 @@ const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =
     ],
   );
 
-export const partView = <Message>(slug: string, h: HtmlBuilder<Message>): Html => {
+export const partView = <Message>(
+  slug: string,
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
   if (slug === typographyMetadata.slug) {
     return typographyPageView(h);
   } else if (slug === surfaceMetadata.slug) {
     return surfacePageView(h);
   } else if (slug === separatorMetadata.slug) {
     return separatorPageView(h);
+  } else if (slug === labelMetadata.slug) {
+    return labelPageView(h);
+  } else if (slug === descriptionMetadata.slug) {
+    return descriptionPageView(config, h);
+  } else if (slug === headerMetadata.slug) {
+    return headerPageView(h);
+  } else if (slug === errorMessageMetadata.slug) {
+    return errorMessagePageView(h);
+  } else if (slug === fieldErrorMetadata.slug) {
+    return fieldErrorPageView(config, h);
+  } else if (slug === kbdMetadata.slug) {
+    return kbdPageView(h);
   } else {
     return missingPartView(slug, h);
   }

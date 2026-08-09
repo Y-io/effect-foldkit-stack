@@ -19,6 +19,22 @@
       "types": "./src/dialog.ts",
       "import": "./src/dialog.ts"
     },
+    "./description": {
+      "types": "./src/description.ts",
+      "import": "./src/description.ts"
+    },
+    "./error-message": {
+      "types": "./src/error-message.ts",
+      "import": "./src/error-message.ts"
+    },
+    "./field-error": {
+      "types": "./src/field-error.ts",
+      "import": "./src/field-error.ts"
+    },
+    "./header": {
+      "types": "./src/header.ts",
+      "import": "./src/header.ts"
+    },
     "./input": {
       "types": "./src/input.ts",
       "import": "./src/input.ts"
@@ -26,6 +42,14 @@
     "./input-group": {
       "types": "./src/input-group.ts",
       "import": "./src/input-group.ts"
+    },
+    "./kbd": {
+      "types": "./src/kbd.ts",
+      "import": "./src/kbd.ts"
+    },
+    "./label": {
+      "types": "./src/label.ts",
+      "import": "./src/label.ts"
     },
     "./combobox": {
       "types": "./src/combobox.ts",
@@ -55,8 +79,14 @@
     "./styles/base.css": "./src/styles/base.css",
     "./styles/button.css": "./src/styles/button.css",
     "./styles/dialog.css": "./src/styles/dialog.css",
+    "./styles/description.css": "./src/styles/description.css",
+    "./styles/error-message.css": "./src/styles/error-message.css",
+    "./styles/field-error.css": "./src/styles/field-error.css",
+    "./styles/header.css": "./src/styles/header.css",
     "./styles/input.css": "./src/styles/input.css",
     "./styles/input-group.css": "./src/styles/input-group.css",
+    "./styles/kbd.css": "./src/styles/kbd.css",
+    "./styles/label.css": "./src/styles/label.css",
     "./styles/combobox.css": "./src/styles/combobox.css",
     "./styles/typography.css": "./src/styles/typography.css",
     "./styles/surface.css": "./src/styles/surface.css",

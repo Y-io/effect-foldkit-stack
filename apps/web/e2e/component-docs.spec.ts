@@ -130,6 +130,169 @@ test("covers every public Typography, Surface, and Separator visual variant", as
   expect(new Set(separatorColors).size).toBe(3);
 });
 
+test("keeps Label native focus behavior while projecting HeroUI field states", async ({ page }) => {
+  await page.goto("/components/parts/label");
+
+  const label = page.getByText("项目名称", { exact: true });
+  const input = page.getByRole("textbox", { name: "项目名称" });
+  await label.click();
+  await expect(input).toBeFocused();
+  await expect(label).toHaveCSS("font-size", "14px");
+  await expect(label).toHaveCSS("font-weight", "500");
+
+  const requiredLabel = page.getByText("必填项目", { exact: true });
+  expect(
+    await requiredLabel.evaluate((element) => getComputedStyle(element, "::after").content),
+  ).toBe('"*"');
+});
+
+test("projects the complete field semantic Parts visual contract", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/parts/label");
+
+  const defaultLabel = page.getByText("项目名称", { exact: true });
+  const invalidLabel = page.getByText("无效项目", { exact: true });
+  const disabledLabel = page.getByText("禁用项目", { exact: true });
+  expect(await invalidLabel.evaluate((element) => getComputedStyle(element).color)).not.toBe(
+    await defaultLabel.evaluate((element) => getComputedStyle(element).color),
+  );
+  expect(
+    await disabledLabel.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
+  ).toBeLessThan(1);
+
+  await page.goto("/components/parts/description");
+  const description = page.getByText("这会显示在团队主页。", { exact: true });
+  await expect(description).toHaveCSS("font-size", "12px");
+  await expect(description).toHaveCSS("overflow-wrap", "break-word");
+
+  await page.goto("/components/parts/header");
+  const header = page.getByText("12 条未读消息", { exact: true });
+  await expect(header).toHaveCSS("font-size", "12px");
+  await expect(header).toHaveCSS("text-align", "start");
+
+  await page.goto("/components/parts/error-message");
+  const errorMessage = page.getByText("此名称已被使用。", { exact: true });
+  expect(
+    await errorMessage.evaluate((element) => getComputedStyle(element).transitionDuration),
+  ).not.toBe("0s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(errorMessage).toHaveCSS("transition-property", "none");
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/parts/field-error");
+  const fieldError = page.locator("#field-error-password-description");
+  const emptyFieldError = page.locator("#field-error-stable-empty");
+  const fieldInput = page.getByRole("textbox", { name: "密码" });
+  await expect(fieldError).toHaveCount(1);
+  await expect(fieldError).not.toHaveAttribute("data-visible", "");
+  await expect(fieldInput).toHaveAttribute("aria-describedby", "field-error-password-description");
+  await expect(fieldInput).toHaveAccessibleDescription("");
+
+  await page.getByRole("button", { name: "显示字段错误" }).click();
+  await expect(fieldError).toHaveCSS("opacity", "1");
+  await expect(fieldError).toHaveAttribute("data-visible", "");
+  await expect(fieldInput).toHaveAccessibleDescription("长度至少为 8 个字符。必须包含数字。");
+  expect(
+    await fieldError.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeGreaterThan(0);
+  expect(
+    await fieldError.evaluate((element) => getComputedStyle(element).transitionDuration),
+  ).not.toBe("0s");
+  await expect(emptyFieldError).not.toHaveAttribute("data-visible", "");
+  await expect(emptyFieldError).toHaveCSS("opacity", "0");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(fieldError).toHaveCSS("transition-property", "none");
+
+  await page.getByRole("button", { name: "隐藏字段错误" }).click();
+  await expect(fieldError).toHaveCount(1);
+  await expect(fieldError).not.toHaveAttribute("data-visible", "");
+  await expect(fieldInput).toHaveAccessibleDescription("");
+  await expect(fieldInput).toHaveAttribute("aria-describedby", "field-error-password-description");
+
+  await page.goto("/components/parts/kbd");
+  const combination = page.getByLabel("打开命令面板快捷键");
+  const longContent = page.getByLabel("长文本快捷键提示");
+  await expect(combination).toHaveJSProperty("tagName", "KBD");
+  await expect(combination.getByTitle("Command")).toHaveText("⌘");
+  await expect(combination.getByTitle("Shift")).toHaveText("⇧");
+  await expect(longContent).toHaveCSS("white-space", "nowrap");
+  expect(
+    await combination.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(await longContent.evaluate((element) => getComputedStyle(element).backgroundColor));
+
+  const lightBackground = await combination.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await combination.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightBackground);
+});
+
+test("keeps one Description Channel while external field content changes", async ({ page }) => {
+  await page.goto("/components/parts/description");
+
+  const input = page.getByRole("textbox", { name: "工作区标识" });
+  const description = page.locator("#description-workspace-slug-description");
+  await expect(input).toHaveAttribute("aria-describedby", "description-workspace-slug-description");
+  await expect(description).toHaveCount(1);
+  await expect(input).toHaveAccessibleDescription("请输入唯一的工作区标识。");
+
+  await page.getByRole("button", { name: "显示校验中" }).click();
+  await expect(description).toHaveCount(1);
+  await expect(input).toHaveAccessibleDescription("正在检查标识是否可用。");
+
+  await page.getByRole("button", { name: "显示错误" }).click();
+  await expect(description).toHaveCount(1);
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+  await expect(input).toHaveAccessibleDescription("此工作区标识已被使用。");
+  await expect(input).toHaveAttribute("aria-describedby", "description-workspace-slug-description");
+});
+
+test("projects light and dark HeroUI tokens for every field semantic Part", async ({ page }) => {
+  const cases = [
+    {
+      path: "label",
+      locate: () => page.getByText("项目名称", { exact: true }),
+    },
+    {
+      path: "description",
+      locate: () => page.getByText("这会显示在团队主页。", { exact: true }),
+    },
+    {
+      path: "header",
+      locate: () => page.getByText("12 条未读消息", { exact: true }),
+    },
+    {
+      path: "error-message",
+      locate: () => page.getByText("此名称已被使用。", { exact: true }),
+    },
+    {
+      path: "field-error",
+      locate: () => page.getByText("长度至少为 8 个字符。必须包含数字。", { exact: true }),
+    },
+    {
+      path: "kbd",
+      locate: () => page.getByLabel("长文本快捷键提示"),
+    },
+  ];
+
+  for (const visualCase of cases) {
+    await page.goto(`/components/parts/${visualCase.path}`);
+    const sample = visualCase.locate();
+    const light = await sample.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return `${style.color}|${style.backgroundColor}`;
+    });
+    await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+    const dark = await sample.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return `${style.color}|${style.backgroundColor}`;
+    });
+    expect(dark).not.toBe(light);
+  }
+});
+
 test("browses and filters the component catalog through public routes", async ({ page }) => {
   await page.goto("/components");
 

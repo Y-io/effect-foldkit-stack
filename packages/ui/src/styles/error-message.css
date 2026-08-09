@@ -1,0 +1,11 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/error-message.css" layer(components);
+
+@layer components {
+  /* NOTE: Tailwind omits HeroUI easing tokens when no matching utility is generated. */
+  .error-message {
+    --ease-out: ease-out;
+    --ease-smooth: ease;
+  }
+}
