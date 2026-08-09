@@ -32,3 +32,9 @@ This project vendors external repositories under `repos/`.
 Before writing or changing Effect code, always read `repos/effect/LLMS.md`.
 
 Inspect `repos/effect/` for idiomatic usage, tests, module structure, and API design. Treat the vendored source as the source of truth for Effect patterns used by this project.
+
+### Foldkit
+
+Before writing or changing Foldkit code, always read `repos/foldkit/AGENTS.md`.
+
+Inspect `repos/foldkit/examples/` and `repos/foldkit/packages/` for idiomatic usage, tests, module structure, and API design. Treat the vendored source as the source of truth for Foldkit patterns used by this project.

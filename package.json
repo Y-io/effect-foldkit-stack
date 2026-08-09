@@ -23,6 +23,7 @@
   "devDependencies": {
     "@effect/tsgo": "catalog:",
     "@effect/vitest": "catalog:",
+    "@foldkit/devtools-mcp": "catalog:",
     "@foldkit/oxlint-plugin": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
