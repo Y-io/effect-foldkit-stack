@@ -567,6 +567,201 @@ test("keeps Alert live-region purpose separate from every visual status", async 
   expect(darkVisual).not.toBe(lightVisual);
 });
 
+test("projects native progress semantics through HeroUI feedback visuals", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/standalone/spinner");
+
+  const spinner = page.getByRole("status", { name: "正在加载项目" });
+  await expect(spinner).toBeVisible();
+  const lightSpinnerColor = await spinner.evaluate((element) => getComputedStyle(element).color);
+  expect(await spinner.evaluate((element) => getComputedStyle(element).animationDuration)).not.toBe(
+    "0s",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(spinner).toHaveCSS("animation-duration", "0s");
+  await page.getByRole("button", { name: "显示加载结果" }).click();
+  await expect(spinner).toHaveCount(0);
+  await expect(page.getByText("项目已加载", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "重新显示加载状态" }).click();
+  await expect(spinner).toHaveCount(1);
+  const spinnerVariants = ["正在保存", "正在同步", "正在重试", "继承当前颜色"].map((name) =>
+    page.getByRole("status", { name }),
+  );
+  const spinnerColors = await Promise.all(
+    spinnerVariants.map((variant) =>
+      variant.evaluate((element) => getComputedStyle(element).color),
+    ),
+  );
+  expect(new Set(spinnerColors).size).toBe(4);
+  const spinnerSizes = await Promise.all(
+    spinnerVariants
+      .slice(0, 3)
+      .map((variant) => variant.evaluate((element) => element.getBoundingClientRect().width)),
+  );
+  expect(spinnerSizes).toEqual([16, 32, 40]);
+  const spinnerGradientIds = await page
+    .locator('[data-slot="spinner-icon"] linearGradient[id]')
+    .evaluateAll((elements) => elements.map((element) => element.id));
+  expect(new Set(spinnerGradientIds).size).toBe(spinnerGradientIds.length);
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(await spinner.evaluate((element) => getComputedStyle(element).color)).toBe(
+    lightSpinnerColor,
+  );
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/standalone/progress-bar");
+  const progressBar = page.getByRole("progressbar", { name: "项目上传进度" });
+  const progressBarFill = progressBar.locator('[data-slot="progress-bar-fill"]');
+  await expect(progressBar).toHaveAttribute("aria-valuenow", "40");
+  const initialBarWidth = await progressBarFill.evaluate(
+    (element) => element.getBoundingClientRect().width,
+  );
+  await page.getByRole("button", { name: "推进条形进度" }).press("Enter");
+  await expect(progressBar).toHaveAttribute("aria-valuenow", "70");
+  expect(
+    await progressBarFill.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThan(initialBarWidth);
+  const indeterminateBar = page.getByRole("progressbar", { name: "正在准备上传" });
+  await expect(indeterminateBar).not.toHaveAttribute("aria-valuenow");
+  expect(
+    await indeterminateBar
+      .locator('[data-slot="progress-bar-fill"]')
+      .evaluate((element) => getComputedStyle(element).animationDuration),
+  ).not.toBe("0s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(indeterminateBar.locator('[data-slot="progress-bar-fill"]')).toHaveCSS(
+    "animation-duration",
+    "0s",
+  );
+  const barVariants = ["默认小尺寸进度", "成功大尺寸进度", "危险进度"].map((name) =>
+    page.getByRole("progressbar", { name }),
+  );
+  const barColors = await Promise.all(
+    barVariants.map((variant) =>
+      variant
+        .locator('[data-slot="progress-bar-fill"]')
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    ),
+  );
+  expect(new Set(barColors).size).toBe(3);
+  const barHeights = await Promise.all(
+    barVariants
+      .slice(0, 2)
+      .map((variant) =>
+        variant
+          .locator('[data-slot="progress-bar-track"]')
+          .evaluate((element) => element.getBoundingClientRect().height),
+      ),
+  );
+  expect(barHeights).toEqual([4, 12]);
+  const progressBarTrack = progressBar.locator('[data-slot="progress-bar-track"]');
+  const lightProgressBarTrack = await progressBarTrack.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await progressBarTrack.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightProgressBarTrack);
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/components/standalone/progress-circle");
+  const progressCircle = page.getByRole("progressbar", { name: "资料处理进度" });
+  const progressCircleFill = progressCircle.locator('[data-slot="progress-circle-fill-circle"]');
+  const initialCircleOffset = await progressCircleFill.getAttribute("stroke-dashoffset");
+  await page.getByRole("button", { name: "推进环形进度" }).click();
+  await expect(progressCircle).toHaveAttribute("aria-valuenow", "70");
+  expect(await progressCircleFill.getAttribute("stroke-dashoffset")).not.toBe(initialCircleOffset);
+  const indeterminateCircle = page.getByRole("progressbar", { name: "正在分析资料" });
+  await expect(indeterminateCircle).not.toHaveAttribute("aria-valuenow");
+  const indeterminateCircleTrack = indeterminateCircle.locator(
+    '[data-slot="progress-circle-track"]',
+  );
+  expect(
+    await indeterminateCircleTrack.evaluate(
+      (element) => getComputedStyle(element).animationDuration,
+    ),
+  ).not.toBe("0s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(indeterminateCircleTrack).toHaveCSS("animation-duration", "0s");
+  const circleVariants = ["警告进度", "成功进度", "默认进度", "危险进度"].map((name) =>
+    page.getByRole("progressbar", { name }),
+  );
+  const circleColors = await Promise.all(
+    circleVariants.map((variant) =>
+      variant
+        .locator('[data-slot="progress-circle-fill-circle"]')
+        .evaluate((element) => getComputedStyle(element).stroke),
+    ),
+  );
+  expect(new Set(circleColors).size).toBe(4);
+  const circleSizes = await Promise.all(
+    circleVariants
+      .slice(0, 2)
+      .map((variant) =>
+        variant
+          .locator('[data-slot="progress-circle-track"]')
+          .evaluate((element) => element.getBoundingClientRect().width),
+      ),
+  );
+  expect(circleSizes).toEqual([20, 36]);
+  const progressCircleTrackCircle = progressCircle.locator(
+    '[data-slot="progress-circle-track-circle"]',
+  );
+  const lightProgressCircleTrack = await progressCircleTrackCircle.evaluate(
+    (element) => getComputedStyle(element).stroke,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await progressCircleTrackCircle.evaluate((element) => getComputedStyle(element).stroke),
+  ).not.toBe(lightProgressCircleTrack);
+
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/components/standalone/meter");
+  const meter = page.getByRole("meter", { name: "存储空间使用量" });
+  await expect(meter).toHaveAttribute("aria-valuemin", "0");
+  await expect(meter).toHaveAttribute("aria-valuemax", "500");
+  await expect(meter).toHaveAttribute("aria-valuenow", "325");
+  const meterTrack = meter.locator('[data-slot="meter-track"]');
+  const lightTrackColor = await meterTrack.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const healthMeter = page.getByRole("meter", { name: "健康容量" });
+  const thresholdMeters = [
+    healthMeter,
+    page.getByRole("meter", { name: "接近容量上限" }),
+    page.getByRole("meter", { name: "容量已告急" }),
+  ];
+  const thresholdColors = await Promise.all(
+    thresholdMeters.map((variant) =>
+      variant
+        .locator('[data-slot="meter-fill"]')
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    ),
+  );
+  expect(new Set(thresholdColors).size).toBe(3);
+  const meterTrackHeights = await Promise.all(
+    thresholdMeters.map((variant) =>
+      variant
+        .locator('[data-slot="meter-track"]')
+        .evaluate((element) => element.getBoundingClientRect().height),
+    ),
+  );
+  expect(meterTrackHeights).toEqual([4, 8, 12]);
+  await expect(healthMeter.locator('[data-slot="meter-fill"]')).toHaveCSS(
+    "transition-duration",
+    "0s",
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await meterTrack.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightTrackColor);
+  const rtlMeter = page.getByRole("meter", { name: "مساحة التخزين المستخدمة" });
+  await expect(rtlMeter).toHaveCSS("direction", "rtl");
+  expect(
+    await rtlMeter.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeLessThanOrEqual(256);
+});
+
 test("browses and filters the component catalog through public routes", async ({ page }) => {
   await page.goto("/components");
 

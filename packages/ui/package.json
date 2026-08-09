@@ -71,6 +71,18 @@
       "types": "./src/label.ts",
       "import": "./src/label.ts"
     },
+    "./meter": {
+      "types": "./src/meter.ts",
+      "import": "./src/meter.ts"
+    },
+    "./progress-bar": {
+      "types": "./src/progress-bar.ts",
+      "import": "./src/progress-bar.ts"
+    },
+    "./progress-circle": {
+      "types": "./src/progress-circle.ts",
+      "import": "./src/progress-circle.ts"
+    },
     "./combobox": {
       "types": "./src/combobox.ts",
       "import": "./src/combobox.ts"
@@ -90,6 +102,10 @@
     "./skeleton": {
       "types": "./src/skeleton.ts",
       "import": "./src/skeleton.ts"
+    },
+    "./spinner": {
+      "types": "./src/spinner.ts",
+      "import": "./src/spinner.ts"
     },
     "./primitives/button": {
       "types": "./src/primitives/button.ts",
@@ -116,11 +132,15 @@
     "./styles/input-group.css": "./src/styles/input-group.css",
     "./styles/kbd.css": "./src/styles/kbd.css",
     "./styles/label.css": "./src/styles/label.css",
+    "./styles/meter.css": "./src/styles/meter.css",
+    "./styles/progress-bar.css": "./src/styles/progress-bar.css",
+    "./styles/progress-circle.css": "./src/styles/progress-circle.css",
     "./styles/combobox.css": "./src/styles/combobox.css",
     "./styles/typography.css": "./src/styles/typography.css",
     "./styles/surface.css": "./src/styles/surface.css",
     "./styles/separator.css": "./src/styles/separator.css",
     "./styles/skeleton.css": "./src/styles/skeleton.css",
+    "./styles/spinner.css": "./src/styles/spinner.css",
     "./package.json": "./package.json"
   },
   "scripts": {

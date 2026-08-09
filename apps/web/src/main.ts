@@ -122,6 +122,8 @@ export const Model = S.Struct({
   skeletonExampleState: ComponentDocs.SkeletonExampleState,
   emptyStateRetryCount: S.Int,
   emptyStateExampleState: ComponentDocs.EmptyStateExampleState,
+  progressExampleValue: S.Int,
+  spinnerExampleState: ComponentDocs.SpinnerExampleState,
 });
 export type Model = typeof Model.Type;
 
@@ -154,6 +156,10 @@ export const RequestedEmptyStateRetry = m("RequestedEmptyStateRetry");
 export const SelectedEmptyStateExampleState = m("SelectedEmptyStateExampleState", {
   state: ComponentDocs.EmptyStateExampleState,
 });
+export const AdvancedProgressExample = m("AdvancedProgressExample");
+export const SelectedSpinnerExampleState = m("SelectedSpinnerExampleState", {
+  state: ComponentDocs.SpinnerExampleState,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -175,6 +181,8 @@ export const Message = S.Union([
   SelectedSkeletonExampleState,
   RequestedEmptyStateRetry,
   SelectedEmptyStateExampleState,
+  AdvancedProgressExample,
+  SelectedSpinnerExampleState,
 ]);
 export type Message = typeof Message.Type;
 
@@ -221,6 +229,15 @@ const commandsForRoute = (
   }
 };
 
+const INITIAL_PROGRESS_EXAMPLE_VALUE = 40;
+const ADVANCED_PROGRESS_EXAMPLE_VALUE = 70;
+const PROGRESS_EXAMPLE_STEP = 30;
+
+const toNextProgressExampleValue = (currentValue: number): number =>
+  currentValue >= ADVANCED_PROGRESS_EXAMPLE_VALUE
+    ? INITIAL_PROGRESS_EXAMPLE_VALUE
+    : currentValue + PROGRESS_EXAMPLE_STEP;
+
 // INIT
 
 export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) => {
@@ -236,6 +253,8 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     skeletonExampleState: "Loading",
     emptyStateRetryCount: 0,
     emptyStateExampleState: "Empty",
+    progressExampleValue: INITIAL_PROGRESS_EXAMPLE_VALUE,
+    spinnerExampleState: "Loading",
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -353,6 +372,16 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
       SelectedEmptyStateExampleState: ({ state }) => [
         evo(model, { emptyStateExampleState: () => state }),
+        [],
+      ],
+      AdvancedProgressExample: () => [
+        evo(model, {
+          progressExampleValue: toNextProgressExampleValue,
+        }),
+        [],
+      ],
+      SelectedSpinnerExampleState: ({ state }) => [
+        evo(model, { spinnerExampleState: () => state }),
         [],
       ],
     }),
@@ -1167,6 +1196,10 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
             emptyStateRetryCount: model.emptyStateRetryCount,
             onEmptyStateRetry: RequestedEmptyStateRetry(),
             onEmptyStateExampleStateChange: (state) => SelectedEmptyStateExampleState({ state }),
+            progressExampleValue: model.progressExampleValue,
+            onAdvanceProgressExample: AdvancedProgressExample(),
+            spinnerExampleState: model.spinnerExampleState,
+            onSpinnerExampleStateChange: (state) => SelectedSpinnerExampleState({ state }),
           },
           h,
         ),

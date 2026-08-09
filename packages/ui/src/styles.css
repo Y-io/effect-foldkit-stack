@@ -8,6 +8,9 @@
 @import "./styles/input-group.css";
 @import "./styles/kbd.css";
 @import "./styles/label.css";
+@import "./styles/meter.css";
+@import "./styles/progress-bar.css";
+@import "./styles/progress-circle.css";
 @import "./styles/dialog.css";
 @import "./styles/description.css";
 @import "./styles/error-message.css";
@@ -17,5 +20,6 @@
 @import "./styles/combobox.css";
 @import "./styles/separator.css";
 @import "./styles/skeleton.css";
+@import "./styles/spinner.css";
 @import "./styles/surface.css";
 @import "./styles/typography.css";

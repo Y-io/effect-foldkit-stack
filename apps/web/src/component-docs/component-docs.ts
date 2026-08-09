@@ -10,8 +10,12 @@ import {
   Header,
   Kbd,
   Label,
+  Meter,
+  ProgressBar,
+  ProgressCircle,
   Separator,
   Skeleton,
+  Spinner,
   Surface,
   Typography,
 } from "@pkg/ui";
@@ -44,9 +48,13 @@ import {
   headerMetadata,
   kbdMetadata,
   labelMetadata,
+  meterMetadata,
   metadata,
+  progressBarMetadata,
+  progressCircleMetadata,
   separatorMetadata,
   skeletonMetadata,
+  spinnerMetadata,
   surfaceMetadata,
   typographyMetadata,
 } from "./metadata";
@@ -63,6 +71,10 @@ export type SkeletonExampleState = typeof SkeletonExampleState.Type;
 export const EmptyStateExampleState = S.Literals(["Empty", "Populated"]);
 export type EmptyStateExampleState = typeof EmptyStateExampleState.Type;
 
+/** Spinner 文档示例中由外层 Model 持有的加载阶段。 */
+export const SpinnerExampleState = S.Literals(["Loading", "Loaded"]);
+export type SpinnerExampleState = typeof SpinnerExampleState.Type;
+
 type PartViewConfig<Message> = Readonly<{
   fieldExampleState: FieldExampleState;
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
@@ -77,6 +89,10 @@ type StandaloneViewConfig<Message> = Readonly<{
   emptyStateRetryCount: number;
   onEmptyStateRetry: Message;
   onEmptyStateExampleStateChange: (state: EmptyStateExampleState) => Message;
+  progressExampleValue: number;
+  onAdvanceProgressExample: Message;
+  spinnerExampleState: SpinnerExampleState;
+  onSpinnerExampleStateChange: (state: SpinnerExampleState) => Message;
 }>;
 
 const metadataRowView = <Message>(
@@ -1916,6 +1932,400 @@ const alertPageView = <Message>(h: HtmlBuilder<Message>): Html =>
     h,
   );
 
+const spinnerLoadingExampleView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [],
+    [
+      Spinner.view({ accessibleLabel: "正在加载项目", gradientId: "spinner-project-loading" }, h),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onSpinnerExampleStateChange("Loaded")),
+          h.Class("ml-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["显示加载结果"],
+      ),
+    ],
+  );
+
+const spinnerLoadedExampleView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [],
+    [
+      h.p([h.Class("text-foreground")], ["项目已加载"]),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onSpinnerExampleStateChange("Loading")),
+          h.Class("mt-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["重新显示加载状态"],
+      ),
+    ],
+  );
+
+const spinnerControlledExampleView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  if (config.spinnerExampleState === "Loading") {
+    return spinnerLoadingExampleView(config, h);
+  } else {
+    return spinnerLoadedExampleView(config, h);
+  }
+};
+
+const spinnerPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    spinnerMetadata,
+    {
+      summary:
+        "以调用方 loading 事实和原生 status 为 Behavior Authority，投射 HeroUI Spinner 视觉。",
+      usage: "用于无法提供完成比例的短时加载反馈，并用任务上下文给出可访问名称。",
+      avoidance: "已知完成比例时应使用 ProgressBar 或 ProgressCircle；Spinner 不负责决定何时出现。",
+      behavior:
+        "调用方决定 loading 分支。Spinner.view 不持有 Model、Message 或计时器，原生 status 与 accessible name 是唯一行为语义。",
+      visual:
+        "color 与 size 直接映射 HeroUI spinnerVariants；旋转只属于视觉，并遵循 reduced motion。",
+      api: "view 要求 accessibleLabel 与用于生成唯一 SVG gradient id 的 gradientId，并接受 color、size、原生 attributes 与 className；内部图标对辅助技术隐藏。",
+      keyboardAndFocus: "Spinner 不进入 Tab 顺序，也没有激活或焦点行为。",
+      aria: "根元素使用 role=status 与调用方提供的 accessibleLabel；装饰图标使用 aria-hidden。",
+      examples: [
+        exampleView("不确定型加载", [spinnerControlledExampleView(config, h)], h),
+        exampleView(
+          "颜色与尺寸",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-5")],
+              [
+                Spinner.view(
+                  {
+                    accessibleLabel: "正在保存",
+                    gradientId: "spinner-saving",
+                    color: "success",
+                    size: "sm",
+                  },
+                  h,
+                ),
+                Spinner.view(
+                  {
+                    accessibleLabel: "正在同步",
+                    gradientId: "spinner-syncing",
+                    color: "warning",
+                    size: "lg",
+                  },
+                  h,
+                ),
+                Spinner.view(
+                  {
+                    accessibleLabel: "正在重试",
+                    gradientId: "spinner-retrying",
+                    color: "danger",
+                    size: "xl",
+                  },
+                  h,
+                ),
+                h.span(
+                  [h.Class("text-muted")],
+                  [
+                    Spinner.view(
+                      {
+                        accessibleLabel: "继承当前颜色",
+                        gradientId: "spinner-current-color",
+                        color: "current",
+                      },
+                      h,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const progressBarPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    progressBarMetadata,
+    {
+      summary: "以原生 progressbar 值语义呈现确定型或不确定型进度，并投射 HeroUI 条形 anatomy。",
+      usage: "用于显示已知比例或暂时未知比例的任务进度。",
+      avoidance: "不用于表达容量或质量阈值；这类已知范围测量应使用 Meter。",
+      behavior:
+        "value、范围与 valueText 来自调用方 Model。ProgressBar.view 只把这些事实投射为标准 ARIA 值属性与 fill 宽度。",
+      visual:
+        "color 与 size 映射 HeroUI progressBarVariants；无 aria-valuenow 时使用官方 indeterminate 动效。",
+      api: "Value 是确定型与不确定型的共享契约。范围省略时为 0/100；提供时 minValue 与 maxValue 必须有限且 minValue < maxValue，确定型 value 必须有限且 minValue ≤ value ≤ maxValue。accessibleLabel 必填，label、output、attributes 与 className 由调用方提供。",
+      keyboardAndFocus: "ProgressBar 不进入 Tab 顺序，也没有键盘操作或焦点状态。",
+      aria: "确定型暴露 aria-valuemin、aria-valuemax、aria-valuenow 与可选 aria-valuetext；不确定型省略 aria-valuenow。",
+      examples: [
+        exampleView(
+          "确定型进度",
+          [
+            ProgressBar.view(
+              {
+                accessibleLabel: "项目上传进度",
+                value: config.progressExampleValue,
+                valueText: `已上传 ${config.progressExampleValue}%`,
+                label: "上传项目",
+                output: `${config.progressExampleValue}%`,
+              },
+              h,
+            ),
+            h.button(
+              [
+                h.Type("button"),
+                h.OnClick(config.onAdvanceProgressExample),
+                h.Class("mt-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+              ],
+              ["推进条形进度"],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "不确定型进度",
+          [
+            ProgressBar.view(
+              {
+                accessibleLabel: "正在准备上传",
+                isIndeterminate: true,
+                color: "warning",
+                label: "准备中",
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "颜色、尺寸与自定义范围",
+          [
+            h.div(
+              [h.Class("grid gap-5")],
+              [
+                ProgressBar.view(
+                  {
+                    accessibleLabel: "默认小尺寸进度",
+                    value: 2,
+                    maxValue: 5,
+                    color: "default",
+                    size: "sm",
+                    output: "2 / 5",
+                  },
+                  h,
+                ),
+                ProgressBar.view(
+                  {
+                    accessibleLabel: "成功大尺寸进度",
+                    value: 80,
+                    color: "success",
+                    size: "lg",
+                    output: "80%",
+                  },
+                  h,
+                ),
+                ProgressBar.view(
+                  {
+                    accessibleLabel: "危险进度",
+                    value: 95,
+                    color: "danger",
+                    output: "95%",
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const progressCirclePageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    progressCircleMetadata,
+    {
+      summary: "复用 ProgressBar 的值语义，以 HeroUI SVG anatomy 呈现环形进度。",
+      usage: "用于紧凑区域中的确定型或不确定型进度反馈。",
+      avoidance: "需要同时展示长标签与精确输出时优先使用 ProgressBar；测量阈值使用 Meter。",
+      behavior:
+        "value、范围与 valueText 仍由调用方 Model 持有，并投射为与 ProgressBar 相同的 progressbar ARIA 属性。SVG 不成为第二行为源。",
+      visual:
+        "color 与 size 映射 HeroUI progressCircleVariants；确定型改变 stroke dash offset，不确定型旋转 track。",
+      api: "Value 与 ProgressBar 使用同一确定型/不确定型字段。范围省略时为 0/100；提供时 minValue 与 maxValue 必须有限且 minValue < maxValue，确定型 value 必须有限且 minValue ≤ value ≤ maxValue。accessibleLabel、attributes 与 className 由调用方提供。",
+      keyboardAndFocus: "ProgressCircle 不进入 Tab 顺序，也没有键盘操作或焦点状态。",
+      aria: "根元素拥有 progressbar role 与值属性；SVG track 和 circles 作为整体对辅助技术隐藏。",
+      examples: [
+        exampleView(
+          "确定型环形进度",
+          [
+            ProgressCircle.view(
+              {
+                accessibleLabel: "资料处理进度",
+                value: config.progressExampleValue,
+                valueText: `已处理 ${config.progressExampleValue}%`,
+              },
+              h,
+            ),
+            h.button(
+              [
+                h.Type("button"),
+                h.OnClick(config.onAdvanceProgressExample),
+                h.Class("ml-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+              ],
+              ["推进环形进度"],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "不确定型与视觉矩阵",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-5")],
+              [
+                ProgressCircle.view({ accessibleLabel: "正在分析资料", isIndeterminate: true }, h),
+                ProgressCircle.view(
+                  { accessibleLabel: "警告进度", value: 65, color: "warning", size: "sm" },
+                  h,
+                ),
+                ProgressCircle.view(
+                  { accessibleLabel: "成功进度", value: 85, color: "success", size: "lg" },
+                  h,
+                ),
+                ProgressCircle.view(
+                  { accessibleLabel: "默认进度", value: 35, color: "default" },
+                  h,
+                ),
+                ProgressCircle.view({ accessibleLabel: "危险进度", value: 95, color: "danger" }, h),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const meterPageView = <Message>(h: HtmlBuilder<Message>): Html =>
+  componentPageView(
+    meterMetadata,
+    {
+      summary: "以标准 meter 值语义展示已知范围内的数量，并由调用方显式选择 HeroUI 阈值颜色。",
+      usage: "用于存储占用、配额、质量或健康度等已知范围内的当前测量。",
+      avoidance:
+        "不用于表示任务完成进度或未知时长的等待；这些场景使用 ProgressBar、ProgressCircle 或 Spinner。",
+      behavior:
+        "调用方持有 value、minValue、maxValue、valueText 与阈值判断。Meter.view 不推断业务边界，只投射标准 meter 属性与视觉。",
+      visual:
+        "color 与 size 映射 HeroUI meterVariants；fill 宽度按有效范围计算并仅在视觉层 clamp，边界颜色由调用方事实显式提供。",
+      api: "范围省略时为 0/100；提供时 minValue 与 maxValue 必须有限且 minValue < maxValue，value 必须有限且 minValue ≤ value ≤ maxValue。view 还要求 accessibleLabel，并支持 valueText、label、output、attributes 与 className。",
+      keyboardAndFocus: "Meter 不进入 Tab 顺序，也没有键盘操作或焦点状态。",
+      aria: "根元素使用 role=meter，并暴露 aria-valuemin、aria-valuemax、aria-valuenow 与可选 aria-valuetext。",
+      examples: [
+        exampleView(
+          "自定义范围与值文本",
+          [
+            Meter.view(
+              {
+                accessibleLabel: "存储空间使用量",
+                value: 325,
+                maxValue: 500,
+                valueText: "已使用 325 GB，共 500 GB",
+                label: "存储空间",
+                output: "325 / 500 GB",
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "调用方阈值颜色",
+          [
+            h.div(
+              [h.Class("grid gap-5")],
+              [
+                Meter.view(
+                  {
+                    accessibleLabel: "健康容量",
+                    value: 35,
+                    color: "success",
+                    size: "sm",
+                    output: "35%",
+                  },
+                  h,
+                ),
+                Meter.view(
+                  {
+                    accessibleLabel: "接近容量上限",
+                    value: 72,
+                    color: "warning",
+                    output: "72%",
+                  },
+                  h,
+                ),
+                Meter.view(
+                  {
+                    accessibleLabel: "容量已告急",
+                    value: 92,
+                    color: "danger",
+                    size: "lg",
+                    output: "92%",
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "长标签、窄容器与 RTL",
+          [
+            Meter.view(
+              {
+                accessibleLabel: "مساحة التخزين المستخدمة",
+                value: 58,
+                color: "default",
+                label: "مساحة التخزين المستخدمة في مساحة العمل المشتركة",
+                output: "58%",
+                attributes: [h.Dir("rtl")],
+                className: "max-w-64",
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =>
   h.section(
     [],
@@ -1979,6 +2389,14 @@ export const standaloneView = <Message>(
     return emptyStatePageView(config, h);
   } else if (slug === alertMetadata.slug) {
     return alertPageView(h);
+  } else if (slug === spinnerMetadata.slug) {
+    return spinnerPageView(config, h);
+  } else if (slug === progressBarMetadata.slug) {
+    return progressBarPageView(config, h);
+  } else if (slug === progressCircleMetadata.slug) {
+    return progressCirclePageView(config, h);
+  } else if (slug === meterMetadata.slug) {
+    return meterPageView(h);
   } else {
     return missingStandaloneView(slug, h);
   }

@@ -27,6 +27,8 @@ const modelOn = (route: Model["route"]): Model =>
     skeletonExampleState: "Loading",
     emptyStateRetryCount: 0,
     emptyStateExampleState: "Empty",
+    progressExampleValue: 40,
+    spinnerExampleState: "Loading",
   });
 
 describe("application view", () => {
@@ -311,6 +313,74 @@ describe("application view", () => {
     );
   });
 
+  test("renders Spinner as a named indeterminate status", () => {
+    const spinner = role("status", { name: "正在加载项目" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "spinner" }))),
+      expect(role("heading", { level: 1, name: "Spinner" })).toExist(),
+      expect(spinner).toExist(),
+      click(role("button", { name: "显示加载结果" })),
+      expect(spinner).toBeAbsent(),
+      expect(text("项目已加载")).toExist(),
+      click(role("button", { name: "重新显示加载状态" })),
+      expect(spinner).toExist(),
+    );
+  });
+
+  test("exposes determinate and indeterminate ProgressBar value semantics", () => {
+    const determinate = role("progressbar", { name: "项目上传进度" });
+    const indeterminate = role("progressbar", { name: "正在准备上传" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "progress-bar" }))),
+      expect(role("heading", { level: 1, name: "ProgressBar" })).toExist(),
+      expect(determinate).toHaveAttr("aria-valuemin", "0"),
+      expect(determinate).toHaveAttr("aria-valuemax", "100"),
+      expect(determinate).toHaveAttr("aria-valuenow", "40"),
+      expect(determinate).toHaveAttr("aria-valuetext", "已上传 40%"),
+      expect(indeterminate).not.toHaveAttr("aria-valuenow"),
+      click(role("button", { name: "推进条形进度" })),
+      expect(determinate).toHaveAttr("aria-valuenow", "70"),
+      expect(determinate).toHaveAttr("aria-valuetext", "已上传 70%"),
+    );
+  });
+
+  test("shares determinate value semantics with ProgressCircle", () => {
+    const determinate = role("progressbar", { name: "资料处理进度" });
+    const indeterminate = role("progressbar", { name: "正在分析资料" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "progress-circle" }))),
+      expect(role("heading", { level: 1, name: "ProgressCircle" })).toExist(),
+      expect(determinate).toHaveAttr("aria-valuemin", "0"),
+      expect(determinate).toHaveAttr("aria-valuemax", "100"),
+      expect(determinate).toHaveAttr("aria-valuenow", "40"),
+      expect(determinate).toHaveAttr("aria-valuetext", "已处理 40%"),
+      expect(indeterminate).not.toHaveAttr("aria-valuenow"),
+      click(role("button", { name: "推进环形进度" })),
+      expect(determinate).toHaveAttr("aria-valuenow", "70"),
+      expect(determinate).toHaveAttr("aria-valuetext", "已处理 70%"),
+    );
+  });
+
+  test("exposes Meter range semantics without owning threshold state", () => {
+    const meter = role("meter", { name: "存储空间使用量" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "meter" }))),
+      expect(role("heading", { level: 1, name: "Meter" })).toExist(),
+      expect(meter).toHaveAttr("aria-valuemin", "0"),
+      expect(meter).toHaveAttr("aria-valuemax", "500"),
+      expect(meter).toHaveAttr("aria-valuenow", "325"),
+      expect(meter).toHaveAttr("aria-valuetext", "已使用 325 GB，共 500 GB"),
+    );
+  });
+
   test("renders Skeleton only from the caller's external loading fact", () => {
     const loadingRegion = role("region", { name: "资料加载示例" });
     const showLoaded = role("button", { name: "显示已加载内容" });
@@ -366,6 +436,10 @@ describe("application view", () => {
       expect(role("link", { name: "Skeleton" })).toExist(),
       expect(role("link", { name: "EmptyState" })).toExist(),
       expect(role("link", { name: "Alert" })).toExist(),
+      expect(role("link", { name: "Spinner" })).toExist(),
+      expect(role("link", { name: "ProgressBar" })).toExist(),
+      expect(role("link", { name: "ProgressCircle" })).toExist(),
+      expect(role("link", { name: "Meter" })).toExist(),
     );
   });
 
