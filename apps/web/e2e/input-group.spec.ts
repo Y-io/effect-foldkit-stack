@@ -61,6 +61,12 @@ test("从主 Input 投射 readonly、invalid 与 focus 外观而不改变 standa
   expect(await plainInput.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
     inputShadowBeforeFocus,
   );
+  expect(await plainInput.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe(
+    "none",
+  );
+  expect(await plainInput.evaluate((element) => getComputedStyle(element).outlineOffset)).toBe(
+    "0px",
+  );
 
   const invalidOutlineColor = await invalidSurface.evaluate(
     (element) => getComputedStyle(element).outlineColor,
@@ -76,6 +82,12 @@ test("从主 Input 投射 readonly、invalid 与 focus 外观而不改变 standa
   expect(await invalidInput.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
     invalidInputShadowBeforeFocus,
   );
+  expect(await invalidInput.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe(
+    "none",
+  );
+  expect(await invalidInput.evaluate((element) => getComputedStyle(element).outlineOffset)).toBe(
+    "0px",
+  );
 
   const standaloneShadowBeforeFocus = await standaloneInput.evaluate(
     (element) => getComputedStyle(element).boxShadow,
@@ -84,6 +96,9 @@ test("从主 Input 投射 readonly、invalid 与 focus 外观而不改变 standa
   expect(await standaloneInput.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
     standaloneShadowBeforeFocus,
   );
+  expect(
+    await standaloneInput.evaluate((element) => getComputedStyle(element).outlineStyle),
+  ).not.toBe("none");
 
   expect(
     await standaloneInput.evaluate((element) => getComputedStyle(element).borderRadius),
@@ -116,6 +131,9 @@ test("Action Affix 保留行为与局部焦点，Group Disabled 不由 wrapper �
   );
   expect(await enabledAction.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe(
     enabledActionShadow,
+  );
+  expect(await enabledAction.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe(
+    "none",
   );
 
   await enabledAction.press("Enter");
