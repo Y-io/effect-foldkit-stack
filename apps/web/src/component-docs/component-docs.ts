@@ -14,6 +14,7 @@ import {
   Header,
   Kbd,
   Label,
+  Link,
   Meter,
   ProgressBar,
   ProgressCircle,
@@ -61,6 +62,7 @@ import {
   headerMetadata,
   kbdMetadata,
   labelMetadata,
+  linkMetadata,
   meterMetadata,
   metadata,
   progressBarMetadata,
@@ -121,6 +123,8 @@ type PartViewConfig<Message> = Readonly<{
 type StandaloneViewConfig<Message> = Readonly<{
   buttonExampleActionCount: number;
   onButtonExampleAction: Message;
+  linkExampleActionCount: number;
+  onLinkExampleAction: Message;
   emptyStateExampleState: EmptyStateExampleState;
   emptyStateRetryCount: number;
   onEmptyStateRetry: Message;
@@ -2926,6 +2930,110 @@ const buttonPageView = <Message>(
     h,
   );
 
+const linkPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    linkMetadata,
+    {
+      summary: "复用原生 anchor 的导航语义，投射 HeroUI Link 视觉。",
+      usage: "用于导航到资源或页面。执行应用操作时使用 Button，而不是伪装为链接。",
+      avoidance: "不持有导航、current、external 或 disabled 状态，不创建平行路由状态机。",
+      behavior:
+        "href、click Message、Tab、Enter、浏览器历史和访问状态仍由原生 anchor 与调用方拥有。",
+      visual:
+        "Link 只映射 HeroUI link 样式、focus-visible、current、external icon 与 disabled 外观。visited 继续完全由浏览器管理，视觉层不写入 visited 状态。",
+      api: "view 接收 href、content、可选 onClick/isCurrent/isExternal/isDisabled 与 className。",
+      keyboardAndFocus:
+        "可用链接保留原生 Tab 和 Enter。disabled Link 不带 href 或 click Message，因此不伪造可用导航。",
+      aria: "current 使用 aria-current=page；disabled 使用 aria-disabled=true；external 保留 target 与 rel。",
+      examples: [
+        exampleView(
+          "受控点击与当前页",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-4")],
+              [
+                Link.view(
+                  {
+                    href: "#link-example",
+                    content: "查看组件目录",
+                    onClick: config.onLinkExampleAction,
+                  },
+                  h,
+                ),
+                Link.view({ href: "#link-current", content: "当前组件目录", isCurrent: true }, h),
+                h.output([], [`已记录链接操作 ${config.linkExampleActionCount} 次`]),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "external 与 disabled",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-4")],
+              [
+                Link.view(
+                  { href: "https://foldkit.dev", content: "访问 Foldkit", isExternal: true },
+                  h,
+                ),
+                Link.view({ content: "不可用链接", isDisabled: true }, h),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "链接与按钮边界",
+          [
+            h.p(
+              [h.Class("text-muted")],
+              ["导航到资源使用 Link，保存或提交等应用操作使用 Button。"],
+            ),
+            Button.view({ content: "保存操作", variant: "primary" }, h),
+          ],
+          h,
+        ),
+        exampleView(
+          "自定义 inline 内容",
+          [
+            Link.view(
+              {
+                href: "#release-notes",
+                content: h.span([], ["查看", h.span([h.Class("font-semibold")], ["版本说明"])]),
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "主题状态投射",
+          [
+            h.div(
+              [h.Class("grid gap-3 sm:grid-cols-2")],
+              [
+                h.div(
+                  [h.DataAttribute("theme", "light"), h.Class("rounded-xl bg-background p-4")],
+                  [Link.view({ href: "#light-link", content: "Light Link" }, h)],
+                ),
+                h.div(
+                  [h.DataAttribute("theme", "dark"), h.Class("rounded-xl bg-background p-4")],
+                  [Link.view({ href: "#dark-link", content: "Dark Link" }, h)],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const closeButtonPageView = <Message>(
   config: StandaloneViewConfig<Message>,
   h: HtmlBuilder<Message>,
@@ -3004,6 +3112,8 @@ export const standaloneView = <Message>(
     return meterPageView(h);
   } else if (slug === buttonMetadata.slug) {
     return buttonPageView(config, h);
+  } else if (slug === linkMetadata.slug) {
+    return linkPageView(config, h);
   } else if (slug === closeButtonMetadata.slug) {
     return closeButtonPageView(config, h);
   } else {

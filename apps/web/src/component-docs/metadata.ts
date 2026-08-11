@@ -543,6 +543,29 @@ export const closeButtonMetadata = ComponentMetadata.make({
   differences: ["组件要求调用方提供 accessibleLabel，父级拥有是否关闭的状态。"],
 });
 
+export const linkMetadata = ComponentMetadata.make({
+  name: "Link",
+  title: "链接",
+  slug: "link",
+  catalog: "standalone",
+  phase: 2,
+  behaviorClass: "B",
+  behaviorAuthority: "原生 anchor 的导航、键盘、焦点与浏览器访问状态",
+  status: "verified",
+  family: "actions",
+  dependencies: ["@heroui/styles/components/link", "foldkit/html"],
+  anatomy: ["native anchor", "optional external icon"],
+  publicParts: ["view"],
+  states: ["default", "current", "external", "disabled", "focus", "visited"],
+  slots: ["link", "link-icon", "link-default-icon"],
+  heroUi: { version: "3.2.4", module: "link" },
+  foldkit: { primitive: "原生 a、href 与调用方 Message" },
+  examples: ["default", "controlled", "current", "external", "disabled", "button-boundary"],
+  differences: [
+    "disabled Link 不带 href 或 click Message，因此不伪造可用导航。visited 由浏览器隐私模型管理，组件不读取或覆盖。",
+  ],
+});
+
 export const metadata: ReadonlyArray<ComponentMetadata> = [
   typographyMetadata,
   surfaceMetadata,
@@ -568,4 +591,5 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   buttonMetadata,
   buttonGroupMetadata,
   closeButtonMetadata,
+  linkMetadata,
 ];

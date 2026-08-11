@@ -1,0 +1,7 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/link.css" layer(components);
+
+.link:focus-visible {
+  @apply status-focused;
+}

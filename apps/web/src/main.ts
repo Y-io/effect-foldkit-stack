@@ -129,6 +129,7 @@ export const Model = S.Struct({
   avatarExampleState: ComponentDocs.AvatarExampleState,
   buttonExampleActionCount: S.Int,
   buttonGroupExampleActionCount: S.Int,
+  linkExampleActionCount: S.Int,
 });
 export type Model = typeof Model.Type;
 
@@ -179,6 +180,7 @@ export const SelectedAvatarExampleState = m("SelectedAvatarExampleState", {
 });
 export const RecordedButtonExampleAction = m("RecordedButtonExampleAction");
 export const RecordedButtonGroupExampleAction = m("RecordedButtonGroupExampleAction");
+export const RecordedLinkExampleAction = m("RecordedLinkExampleAction");
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -207,6 +209,7 @@ export const Message = S.Union([
   SelectedAvatarExampleState,
   RecordedButtonExampleAction,
   RecordedButtonGroupExampleAction,
+  RecordedLinkExampleAction,
 ]);
 export type Message = typeof Message.Type;
 
@@ -284,6 +287,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     avatarExampleState: "Loading",
     buttonExampleActionCount: 0,
     buttonGroupExampleActionCount: 0,
+    linkExampleActionCount: 0,
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -431,6 +435,10 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
       RecordedButtonGroupExampleAction: () => [
         evo(model, { buttonGroupExampleActionCount: Number.increment }),
+        [],
+      ],
+      RecordedLinkExampleAction: () => [
+        evo(model, { linkExampleActionCount: Number.increment }),
         [],
       ],
     }),
@@ -1251,6 +1259,8 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
           {
             buttonExampleActionCount: model.buttonExampleActionCount,
             onButtonExampleAction: RecordedButtonExampleAction(),
+            linkExampleActionCount: model.linkExampleActionCount,
+            onLinkExampleAction: RecordedLinkExampleAction(),
             emptyStateExampleState: model.emptyStateExampleState,
             emptyStateRetryCount: model.emptyStateRetryCount,
             onEmptyStateRetry: RequestedEmptyStateRetry(),

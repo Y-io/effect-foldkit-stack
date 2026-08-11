@@ -17,6 +17,7 @@ export { default as Input } from "./input";
 export { default as InputGroup } from "./input-group";
 export { default as Kbd } from "./kbd";
 export { default as Label } from "./label";
+export { default as Link } from "./link";
 export { default as Meter } from "./meter";
 export { default as ProgressBar } from "./progress-bar";
 export { default as ProgressCircle } from "./progress-circle";

@@ -997,6 +997,42 @@ test("projects ButtonGroup layout without replacing member Button behavior", asy
   );
 });
 
+test("projects native Link navigation semantics through HeroUI visuals", async ({ page }) => {
+  await page.goto("/components/standalone/link");
+
+  const link = page.getByRole("link", { name: "查看组件目录", exact: true });
+  const current = page.getByRole("link", { name: "当前组件目录", exact: true });
+  const external = page.getByRole("link", { name: "访问 Foldkit", exact: true });
+  const disabled = page.locator('a[aria-disabled="true"]');
+  await expect(link).toHaveAttribute("href", "#link-example");
+  await expect(current).toHaveAttribute("aria-current", "page");
+  await expect(external).toHaveAttribute("target", "_blank");
+  await expect(external).toHaveAttribute("rel", "noreferrer");
+  await expect(external.locator('[data-slot="link-icon"]')).toBeVisible();
+  await expect(external.locator('[data-slot="link-default-icon"]')).toBeVisible();
+  await expect(disabled).toHaveText("不可用链接");
+  await expect(disabled).not.toHaveAttribute("href");
+  await expect(disabled).not.toHaveAttribute("tabindex");
+  await link.click();
+  await expect(page.getByText("已记录链接操作 1 次", { exact: true })).toBeVisible();
+  await link.focus();
+  await link.press("Enter");
+  await expect(page.getByText("已记录链接操作 2 次", { exact: true })).toBeVisible();
+  await external.focus();
+  await external.press("Shift+Tab");
+  await expect(current).toBeFocused();
+  expect(await current.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe("none");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(link).toHaveCSS("transition-duration", "0s");
+
+  const light = page.getByRole("link", { name: "Light Link", exact: true });
+  const dark = page.getByRole("link", { name: "Dark Link", exact: true });
+  expect(await light.evaluate((element) => getComputedStyle(element).color)).not.toBe(
+    await dark.evaluate((element) => getComputedStyle(element).color),
+  );
+  await expect(page.getByRole("link", { name: "查看版本说明" })).toBeVisible();
+});
+
 test("projects ScrollShadow edges from real scrolling without changing native semantics", async ({
   page,
 }) => {

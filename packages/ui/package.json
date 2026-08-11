@@ -83,6 +83,10 @@
       "types": "./src/label.ts",
       "import": "./src/label.ts"
     },
+    "./link": {
+      "types": "./src/link.ts",
+      "import": "./src/link.ts"
+    },
     "./meter": {
       "types": "./src/meter.ts",
       "import": "./src/meter.ts"

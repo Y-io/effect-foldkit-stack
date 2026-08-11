@@ -1,5 +1,5 @@
 import { Option } from "effect";
-import { Mount, click, expect, given, role, scene, text } from "foldkit/scene";
+import { Mount, click, expect, given, role, scene, selector, text } from "foldkit/scene";
 import { describe, test } from "vitest";
 import { ObserveScrollShadow } from "@pkg/ui/scroll-shadow";
 
@@ -41,6 +41,7 @@ const modelOn = (route: Model["route"]): Model =>
     avatarExampleState: "Loading",
     buttonExampleActionCount: 0,
     buttonGroupExampleActionCount: 0,
+    linkExampleActionCount: 0,
   });
 
 describe("application view", () => {
@@ -136,6 +137,20 @@ describe("application view", () => {
       expect(text("已记录按钮组操作 0 次")).toExist(),
       click(role("button", { name: "保存分组" })),
       expect(text("已记录按钮组操作 1 次")).toExist(),
+    );
+  });
+
+  test("documents Link through native navigation semantics and caller-owned Message", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "link" }))),
+      expect(role("heading", { level: 1, name: "Link" })).toExist(),
+      expect(role("link", { name: "查看组件目录" })).toExist(),
+      expect(text("已记录链接操作 0 次")).toExist(),
+      click(role("link", { name: "查看组件目录" })),
+      expect(text("已记录链接操作 1 次")).toExist(),
+      expect(role("link", { name: "当前组件目录" })).toHaveAttr("aria-current", "page"),
+      expect(selector('a[aria-disabled="true"]')).toHaveText("不可用链接"),
     );
   });
 
