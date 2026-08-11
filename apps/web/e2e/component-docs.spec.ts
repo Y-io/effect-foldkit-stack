@@ -851,6 +851,84 @@ test("projects caller-owned Avatar image states through native image events", as
   ).not.toBe(lightBackground);
 });
 
+test("projects Foldkit Button semantics through Button and CloseButton visuals", async ({
+  page,
+}) => {
+  await page.goto("/components/standalone/button");
+
+  const save = page.getByRole("button", { name: "保存", exact: true });
+  const pending = page.getByRole("button", { name: "正在保存", exact: true });
+  const disabled = page.getByRole("button", { name: "不可用", exact: true });
+  const iconOnly = page.getByRole("button", { name: "＋", exact: true });
+  const fullWidth = page.getByRole("button", { name: "全宽操作", exact: true });
+  const small = page.getByRole("button", { name: "小尺寸操作", exact: true });
+  const actionCount = page.getByText("已记录操作 3 次", { exact: true });
+  await expect(save).toHaveAttribute("type", "button");
+  await expect(pending).toHaveAttribute("aria-busy", "true");
+  await expect(pending).toHaveAttribute("data-pending", "true");
+  await expect(pending).toHaveAttribute("aria-disabled", "true");
+  await expect(disabled).toHaveAttribute("aria-disabled", "true");
+  await expect(iconOnly).toHaveAttribute("data-slot", "button");
+  expect(
+    await fullWidth.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThan(await save.evaluate((element) => element.getBoundingClientRect().width));
+  expect(await small.evaluate((element) => element.getBoundingClientRect().height)).toBeLessThan(
+    await save.evaluate((element) => element.getBoundingClientRect().height),
+  );
+  await save.focus();
+  await expect(save).toBeFocused();
+  await save.hover();
+  await page.mouse.down();
+  expect(await save.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+  await page.mouse.up();
+  await save.click();
+  await save.press("Enter");
+  await expect(actionCount).toBeVisible();
+  await pending.focus();
+  await expect(pending).toBeFocused();
+  await pending.press("Enter");
+  await expect(actionCount).toBeVisible();
+  await disabled.focus();
+  await expect(disabled).toBeFocused();
+  await disabled.press(" ");
+  await expect(actionCount).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(pending.locator('[data-slot="spinner"]')).toHaveCSS("animation-duration", "0.001s");
+
+  const lightButton = page.getByRole("button", { name: "Light Button" });
+  const darkButton = page.getByRole("button", { name: "Dark Button" });
+  expect(
+    await lightButton.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(await darkButton.evaluate((element) => getComputedStyle(element).backgroundColor));
+
+  await page.goto("/components/standalone/close-button");
+  const close = page.getByRole("button", { name: "关闭通知" });
+  const disabledClose = page.getByRole("button", { name: "关闭不可用通知" });
+  const closeActionCount = page.getByText("已记录操作 3 次", { exact: true });
+  await expect(close).toHaveAttribute("type", "button");
+  await expect(close).toHaveAttribute("data-slot", "close-button");
+  await expect(disabledClose).toHaveAttribute("aria-disabled", "true");
+  await close.focus();
+  await expect(close).toBeFocused();
+  await close.hover();
+  await page.mouse.down();
+  expect(await close.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+  await page.mouse.up();
+  await close.click();
+  await close.press(" ");
+  await expect(closeActionCount).toBeVisible();
+  await disabledClose.focus();
+  await expect(disabledClose).toBeFocused();
+  await disabledClose.press("Enter");
+  await expect(closeActionCount).toBeVisible();
+
+  const lightClose = page.getByRole("button", { name: "Light CloseButton" });
+  const darkClose = page.getByRole("button", { name: "Dark CloseButton" });
+  expect(await lightClose.evaluate((element) => getComputedStyle(element).color)).not.toBe(
+    await darkClose.evaluate((element) => getComputedStyle(element).color),
+  );
+});
+
 test("projects ScrollShadow edges from real scrolling without changing native semantics", async ({
   page,
 }) => {

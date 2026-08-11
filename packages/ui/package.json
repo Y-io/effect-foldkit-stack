@@ -35,6 +35,10 @@
       "types": "./src/chip.ts",
       "import": "./src/chip.ts"
     },
+    "./close-button": {
+      "types": "./src/close-button.ts",
+      "import": "./src/close-button.ts"
+    },
     "./dialog": {
       "types": "./src/dialog.ts",
       "import": "./src/dialog.ts"

@@ -39,6 +39,7 @@ const modelOn = (route: Model["route"]): Model =>
     progressExampleValue: 40,
     spinnerExampleState: "Loading",
     avatarExampleState: "Loading",
+    buttonExampleActionCount: 0,
   });
 
 describe("application view", () => {
@@ -358,6 +359,24 @@ describe("application view", () => {
       click(role("button", { name: "显示Missing头像" })),
       expect(avatar).toExist(),
       expect(text("当前图片状态：Missing")).toExist(),
+    );
+  });
+
+  test("documents Button and CloseButton without replacing Foldkit Button semantics", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "button" }))),
+      expect(role("heading", { level: 1, name: "Button" })).toExist(),
+      expect(role("button", { name: "保存" })).toExist(),
+      expect(role("button", { name: "正在保存", disabled: true })).toExist(),
+      click(role("button", { name: "保存" })),
+      expect(text("已记录操作 1 次")).toExist(),
+      given(modelOn(ComponentStandaloneRoute({ slug: "close-button" }))),
+      expect(role("heading", { level: 1, name: "CloseButton" })).toExist(),
+      expect(role("button", { name: "关闭通知" })).toExist(),
+      expect(role("button", { name: "关闭不可用通知", disabled: true })).toExist(),
+      click(role("button", { name: "关闭通知" })),
+      expect(text("已记录操作 1 次")).toExist(),
     );
   });
 

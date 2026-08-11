@@ -127,6 +127,7 @@ export const Model = S.Struct({
   progressExampleValue: S.Int,
   spinnerExampleState: ComponentDocs.SpinnerExampleState,
   avatarExampleState: ComponentDocs.AvatarExampleState,
+  buttonExampleActionCount: S.Int,
 });
 export type Model = typeof Model.Type;
 
@@ -175,6 +176,7 @@ export const SelectedSpinnerExampleState = m("SelectedSpinnerExampleState", {
 export const SelectedAvatarExampleState = m("SelectedAvatarExampleState", {
   state: ComponentDocs.AvatarExampleState,
 });
+export const RecordedButtonExampleAction = m("RecordedButtonExampleAction");
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -201,6 +203,7 @@ export const Message = S.Union([
   AdvancedProgressExample,
   SelectedSpinnerExampleState,
   SelectedAvatarExampleState,
+  RecordedButtonExampleAction,
 ]);
 export type Message = typeof Message.Type;
 
@@ -276,6 +279,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     progressExampleValue: INITIAL_PROGRESS_EXAMPLE_VALUE,
     spinnerExampleState: "Loading",
     avatarExampleState: "Loading",
+    buttonExampleActionCount: 0,
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -415,6 +419,10 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
       SelectedAvatarExampleState: ({ state }) => [
         evo(model, { avatarExampleState: () => state }),
+        [],
+      ],
+      RecordedButtonExampleAction: () => [
+        evo(model, { buttonExampleActionCount: Number.increment }),
         [],
       ],
     }),
@@ -1231,6 +1239,8 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
         ComponentDocs.standaloneView(
           slug,
           {
+            buttonExampleActionCount: model.buttonExampleActionCount,
+            onButtonExampleAction: RecordedButtonExampleAction(),
             emptyStateExampleState: model.emptyStateExampleState,
             emptyStateRetryCount: model.emptyStateRetryCount,
             onEmptyStateRetry: RequestedEmptyStateRetry(),

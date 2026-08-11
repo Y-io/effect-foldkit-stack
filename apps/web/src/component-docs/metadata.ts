@@ -480,6 +480,48 @@ export const scrollShadowMetadata = ComponentMetadata.make({
   differences: ["不移植 React hook；Mount 生命周期观察 DOM，外层 Model 持有可见边缘。"],
 });
 
+export const buttonMetadata = ComponentMetadata.make({
+  name: "Button",
+  title: "按钮",
+  slug: "button",
+  catalog: "standalone",
+  phase: 2,
+  behaviorClass: "B",
+  behaviorAuthority: "Foldkit Button 的 click、disabled、keyboard 与 aria-disabled 契约",
+  status: "verified",
+  family: "actions",
+  dependencies: ["@heroui/styles/components/button", "@foldkit/ui/button"],
+  anatomy: ["native button", "optional leading/trailing content", "optional pending indicator"],
+  publicParts: ["view"],
+  states: ["variant", "size", "icon-only", "pending", "disabled", "full-width"],
+  slots: ["button", "leading", "trailing", "spinner"],
+  heroUi: { version: "3.2.4", module: "button" },
+  foldkit: { primitive: "@foldkit/ui/button" },
+  examples: ["default", "sizes", "icon-only", "full-width", "pending", "disabled"],
+  differences: ["pending 映射为 Foldkit Button 的 disabled 事实，不创建独立加载状态机。"],
+});
+
+export const closeButtonMetadata = ComponentMetadata.make({
+  name: "CloseButton",
+  title: "关闭按钮",
+  slug: "close-button",
+  catalog: "standalone",
+  phase: 2,
+  behaviorClass: "B",
+  behaviorAuthority: "Foldkit Button 的 click、disabled、keyboard 与 aria-disabled 契约",
+  status: "verified",
+  family: "actions",
+  dependencies: ["@heroui/styles/components/close-button", "@foldkit/ui/button"],
+  anatomy: ["native button", "decorative close icon"],
+  publicParts: ["view"],
+  states: ["default", "disabled", "focus"],
+  slots: ["close-button", "close-button-icon"],
+  heroUi: { version: "3.2.4", module: "close-button" },
+  foldkit: { primitive: "@foldkit/ui/button" },
+  examples: ["default", "custom-label", "disabled"],
+  differences: ["组件要求调用方提供 accessibleLabel，父级拥有是否关闭的状态。"],
+});
+
 export const metadata: ReadonlyArray<ComponentMetadata> = [
   typographyMetadata,
   surfaceMetadata,
@@ -502,4 +544,6 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   meterMetadata,
   avatarMetadata,
   scrollShadowMetadata,
+  buttonMetadata,
+  closeButtonMetadata,
 ];

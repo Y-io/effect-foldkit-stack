@@ -2,8 +2,10 @@ import {
   Alert,
   Avatar,
   Badge,
+  Button,
   Card,
   Chip,
+  CloseButton,
   Description,
   EmptyState,
   ErrorMessage,
@@ -41,10 +43,12 @@ import {
   alertMetadata,
   avatarMetadata,
   badgeMetadata,
+  buttonMetadata,
   type BehaviorClass,
   type Catalog,
   cardMetadata,
   chipMetadata,
+  closeButtonMetadata,
   type ComponentMetadata,
   type Phase,
   type Status,
@@ -111,6 +115,8 @@ type PartViewConfig<Message> = Readonly<{
 }>;
 
 type StandaloneViewConfig<Message> = Readonly<{
+  buttonExampleActionCount: number;
+  onButtonExampleAction: Message;
   emptyStateExampleState: EmptyStateExampleState;
   emptyStateRetryCount: number;
   onEmptyStateRetry: Message;
@@ -2686,6 +2692,154 @@ const missingStandaloneView = <Message>(slug: string, h: HtmlBuilder<Message>): 
     ],
   );
 
+const buttonPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    buttonMetadata,
+    {
+      summary: "复用 Foldkit Button 的行为与语义，投射 HeroUI Button 视觉。",
+      usage: "调用方提供 click Message 和 pending/disabled 事实。",
+      avoidance: "Button 不持有 loading 或 disabled 状态，也不重实现键盘行为。",
+      behavior: "Foldkit Button 保留 click、Enter、Space、焦点与 aria-disabled 契约。",
+      visual: "variant、size、icon-only 与 pending 映射 HeroUI buttonVariants。",
+      api: "view 接受 content、onClick、isDisabled、isLoading、leading、trailing 与视觉 variants。",
+      keyboardAndFocus: "原生 button 保留 Tab、Enter、Space 与局部焦点提示。",
+      aria: "pending 使用 aria-busy；disabled 采用 Foldkit Button 的 aria-disabled 语义。",
+      examples: [
+        exampleView(
+          "文本、尺寸与图标按钮",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-3")],
+              [
+                Button.view(
+                  { content: "保存", variant: "primary", onClick: config.onButtonExampleAction },
+                  h,
+                ),
+                Button.view(
+                  {
+                    content: "次要操作",
+                    variant: "secondary",
+                    size: "lg",
+                    leading: h.span([], ["←"]),
+                    trailing: h.span([], ["→"]),
+                    onClick: config.onButtonExampleAction,
+                  },
+                  h,
+                ),
+                Button.view({ content: "小尺寸操作", size: "sm", variant: "outline" }, h),
+                Button.view({ content: "＋", isIconOnly: true, variant: "ghost" }, h),
+                Button.view(
+                  {
+                    content: "全宽操作",
+                    isFullWidth: true,
+                    variant: "tertiary",
+                    onClick: config.onButtonExampleAction,
+                  },
+                  h,
+                ),
+              ],
+            ),
+            h.output([], [`已记录操作 ${config.buttonExampleActionCount} 次`]),
+          ],
+          h,
+        ),
+        exampleView(
+          "主题状态投射",
+          [
+            h.div(
+              [h.Class("grid gap-3 sm:grid-cols-2")],
+              [
+                h.div(
+                  [h.DataAttribute("theme", "light"), h.Class("rounded-xl bg-background p-4")],
+                  [Button.view({ content: "Light Button", variant: "tertiary" }, h)],
+                ),
+                h.div(
+                  [h.DataAttribute("theme", "dark"), h.Class("rounded-xl bg-background p-4")],
+                  [Button.view({ content: "Dark Button", variant: "tertiary" }, h)],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "pending 与 disabled",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-3")],
+              [
+                Button.view({ content: "正在保存", isLoading: true, variant: "primary" }, h),
+                Button.view({ content: "不可用", isDisabled: true, variant: "danger" }, h),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
+const closeButtonPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    closeButtonMetadata,
+    {
+      summary: "复用 Foldkit Button 行为的 icon-only CloseButton。",
+      usage: "调用方提供明确 accessibleLabel 与关闭 Message，并保留父级关闭状态。",
+      avoidance: "CloseButton 不自行隐藏父级内容或维护 open 状态。",
+      behavior: "Foldkit Button 继续拥有 click、键盘、焦点和 disabled 语义。",
+      visual: "HeroUI close-button 样式只投射图标按钮外观。",
+      api: "view 要求 accessibleLabel，可选 onClick、isDisabled、icon 与 className。",
+      keyboardAndFocus: "原生 button 保留 Tab、Enter、Space 与局部焦点提示。",
+      aria: "accessibleLabel 是必填项；close icon 为装饰内容。",
+      examples: [
+        exampleView(
+          "明确名称与 disabled",
+          [
+            h.div(
+              [h.Class("flex items-center gap-3")],
+              [
+                CloseButton.view(
+                  { accessibleLabel: "关闭通知", onClick: config.onButtonExampleAction },
+                  h,
+                ),
+                h.output([], [`已记录操作 ${config.buttonExampleActionCount} 次`]),
+                CloseButton.view({ accessibleLabel: "关闭不可用通知", isDisabled: true }, h),
+              ],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "主题状态投射",
+          [
+            h.div(
+              [h.Class("grid gap-3 sm:grid-cols-2")],
+              [
+                h.div(
+                  [h.DataAttribute("theme", "light"), h.Class("rounded-xl bg-background p-4")],
+                  [CloseButton.view({ accessibleLabel: "Light CloseButton" }, h)],
+                ),
+                h.div(
+                  [h.DataAttribute("theme", "dark"), h.Class("rounded-xl bg-background p-4")],
+                  [CloseButton.view({ accessibleLabel: "Dark CloseButton" }, h)],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 export const standaloneView = <Message>(
   slug: string,
   config: StandaloneViewConfig<Message>,
@@ -2705,6 +2859,10 @@ export const standaloneView = <Message>(
     return progressCirclePageView(config, h);
   } else if (slug === meterMetadata.slug) {
     return meterPageView(h);
+  } else if (slug === buttonMetadata.slug) {
+    return buttonPageView(config, h);
+  } else if (slug === closeButtonMetadata.slug) {
+    return closeButtonPageView(config, h);
   } else {
     return missingStandaloneView(slug, h);
   }

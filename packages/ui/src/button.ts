@@ -55,13 +55,18 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
                 className,
               ),
             ),
+            h.DataAttribute("slot", "button"),
             ...(isLoading ? [h.AriaBusy(true), h.DataAttribute("pending", "true")] : []),
           ],
           [
             ...(isLoading ? [Icons.spinner(h)] : []),
-            ...(leading === undefined ? [] : [leading]),
+            ...(leading === undefined
+              ? []
+              : [h.span([h.DataAttribute("slot", "leading")], [leading])]),
             content,
-            ...(trailing === undefined ? [] : [trailing]),
+            ...(trailing === undefined
+              ? []
+              : [h.span([h.DataAttribute("slot", "trailing")], [trailing])]),
           ],
         ),
     },
@@ -69,6 +74,6 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
   );
 };
 
-const Button = { view } as const;
+const Button = { view };
 
 export default Button;

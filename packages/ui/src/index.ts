@@ -4,6 +4,7 @@ export { default as Badge } from "./badge";
 export { default as Button } from "./button";
 export { default as Card } from "./card";
 export { default as Chip } from "./chip";
+export { default as CloseButton } from "./close-button";
 export { default as Combobox } from "./combobox";
 export { default as Dialog } from "./dialog";
 export { default as Description } from "./description";
