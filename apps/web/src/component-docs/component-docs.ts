@@ -1,5 +1,6 @@
 import {
   Alert,
+  Avatar,
   Badge,
   Card,
   Chip,
@@ -19,6 +20,10 @@ import {
   Surface,
   Typography,
 } from "@pkg/ui";
+import type {
+  ImageConfig as AvatarImageConfig,
+  ImageState as AvatarImageState,
+} from "@pkg/ui/avatar";
 import { Array, Option, Schema as S } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
@@ -33,6 +38,7 @@ import {
 } from "../route";
 import {
   alertMetadata,
+  avatarMetadata,
   badgeMetadata,
   type BehaviorClass,
   type Catalog,
@@ -75,6 +81,16 @@ export type EmptyStateExampleState = typeof EmptyStateExampleState.Type;
 export const SpinnerExampleState = S.Literals(["Loading", "Loaded"]);
 export type SpinnerExampleState = typeof SpinnerExampleState.Type;
 
+/** Avatar 文档示例中由外层 Model 持有的图片与资源阶段。 */
+export const AvatarExampleState = S.Literals([
+  "Loading",
+  "Loaded",
+  "Failed",
+  "Missing",
+  "LoadingBroken",
+]);
+export type AvatarExampleState = typeof AvatarExampleState.Type;
+
 type PartViewConfig<Message> = Readonly<{
   fieldExampleState: FieldExampleState;
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
@@ -93,6 +109,8 @@ type StandaloneViewConfig<Message> = Readonly<{
   onAdvanceProgressExample: Message;
   spinnerExampleState: SpinnerExampleState;
   onSpinnerExampleStateChange: (state: SpinnerExampleState) => Message;
+  avatarExampleState: AvatarExampleState;
+  onAvatarExampleStateChange: (state: AvatarExampleState) => Message;
 }>;
 
 const metadataRowView = <Message>(
@@ -2057,6 +2075,193 @@ const spinnerPageView = <Message>(
     h,
   );
 
+const avatarImageConfig = <Message>(
+  onAvatarExampleStateChange: (state: AvatarExampleState) => Message,
+  src = "/avatar-delayed.svg",
+): AvatarImageConfig<Message> => ({
+  src,
+  onLoad: onAvatarExampleStateChange("Loaded"),
+  onError: onAvatarExampleStateChange("Failed"),
+  loading: "eager",
+});
+
+const avatarImageState = <Message>(
+  status: AvatarExampleState,
+  onAvatarExampleStateChange: (state: AvatarExampleState) => Message,
+): AvatarImageState<Message> => {
+  if (status === "Loading") {
+    return { _tag: "Loading", image: avatarImageConfig(onAvatarExampleStateChange) };
+  } else if (status === "Loaded") {
+    return { _tag: "Loaded", image: avatarImageConfig(onAvatarExampleStateChange) };
+  } else if (status === "Failed") {
+    return { _tag: "Failed" };
+  } else if (status === "Missing") {
+    return { _tag: "Missing" };
+  } else {
+    return {
+      _tag: "Loading",
+      image: avatarImageConfig(onAvatarExampleStateChange, "/avatar-error.svg"),
+    };
+  }
+};
+
+const avatarControlledExampleView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [h.Class("flex flex-wrap items-center gap-3")],
+    [
+      Avatar.view(
+        {
+          accessibleLabel: "Ada Lovelace",
+          imageState: avatarImageState(
+            config.avatarExampleState,
+            config.onAvatarExampleStateChange,
+          ),
+          fallback: "AL",
+          size: "lg",
+        },
+        h,
+      ),
+      h.p([h.Class("text-muted")], [`当前图片状态：${config.avatarExampleState}`]),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onAvatarExampleStateChange("Loading")),
+          h.Class("rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["显示Loading头像"],
+      ),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onAvatarExampleStateChange("Loaded")),
+          h.Class("rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["显示Loaded头像"],
+      ),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onAvatarExampleStateChange("Failed")),
+          h.Class("rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["显示Failed头像"],
+      ),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onAvatarExampleStateChange("Missing")),
+          h.Class("rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["显示Missing头像"],
+      ),
+      h.button(
+        [
+          h.Type("button"),
+          h.OnClick(config.onAvatarExampleStateChange("LoadingBroken")),
+          h.Class("rounded-lg border border-border px-3 py-2 text-sm font-semibold"),
+        ],
+        ["尝试不可用图片"],
+      ),
+    ],
+  );
+
+const avatarPageView = <Message>(
+  config: StandaloneViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    avatarMetadata,
+    {
+      summary:
+        "以外层图片状态与 Foldkit 原生 img 事件为 Behavior Authority，投射 HeroUI Avatar 视觉。",
+      usage: "用于展示人物、团队或实体的紧凑身份标识，并始终提供稳定的 accessibleLabel。",
+      avoidance:
+        "不要让 Avatar 自行请求、轮询或推断图片状态；由调用方 Model 消费 load/error Message。",
+      behavior:
+        "调用方持有 Loading、Loaded、Failed、Missing 与资源选择事实。Avatar.view 只在 Loading 与 Loaded 阶段渲染原生 img，并把 OnLoad 与 OnError 原样投射为调用方 Message。",
+      visual:
+        "color、size 与 variant 直接映射 HeroUI avatarVariants。Loading 仅隐藏图片视觉，保留 fallback，图片 load 后以 HeroUI transition 覆盖 fallback。",
+      api: "view 要求 accessibleLabel、imageState 与 fallback；有图片时提供 src、onLoad、onError 和可选 loading。color、size、variant、attributes 与 className 用于视觉和原生扩展。",
+      keyboardAndFocus:
+        "Avatar 本身不进入 Tab 顺序。示例中的外部状态按钮保持原生按钮键盘行为，Avatar 不拦截任何事件。",
+      aria: "根元素使用 role=img 与 accessibleLabel。fallback 和内部 img 对辅助技术隐藏，因此状态切换不会重复朗读同一身份名称。",
+      examples: [
+        exampleView("调用方拥有的图片状态", [avatarControlledExampleView(config, h)], h),
+        exampleView(
+          "颜色、尺寸与 fallback",
+          [
+            h.div(
+              [h.Class("flex flex-wrap items-center gap-5")],
+              [
+                Avatar.view(
+                  {
+                    accessibleLabel: "默认小头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: "DS",
+                    size: "sm",
+                  },
+                  h,
+                ),
+                Avatar.view(
+                  {
+                    accessibleLabel: "成功中头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: "OK",
+                    color: "success",
+                    size: "md",
+                  },
+                  h,
+                ),
+                Avatar.view(
+                  {
+                    accessibleLabel: "危险大头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: "!",
+                    color: "danger",
+                    size: "lg",
+                    variant: "soft",
+                  },
+                  h,
+                ),
+                Avatar.view(
+                  {
+                    accessibleLabel: "强调色头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: "AC",
+                    color: "accent",
+                  },
+                  h,
+                ),
+                Avatar.view(
+                  {
+                    accessibleLabel: "警告色头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: "WA",
+                    color: "warning",
+                  },
+                  h,
+                ),
+                Avatar.view(
+                  {
+                    accessibleLabel: "自定义内容头像",
+                    imageState: { _tag: "Missing" },
+                    fallback: h.span([h.Class("font-bold")], ["自定义"]),
+                  },
+                  h,
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const progressBarPageView = <Message>(
   config: StandaloneViewConfig<Message>,
   h: HtmlBuilder<Message>,
@@ -2391,6 +2596,8 @@ export const standaloneView = <Message>(
     return alertPageView(h);
   } else if (slug === spinnerMetadata.slug) {
     return spinnerPageView(config, h);
+  } else if (slug === avatarMetadata.slug) {
+    return avatarPageView(config, h);
   } else if (slug === progressBarMetadata.slug) {
     return progressBarPageView(config, h);
   } else if (slug === progressCircleMetadata.slug) {

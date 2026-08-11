@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { Deferred, Effect } from "effect";
 
 test("proves the stage-one visual protocol with real computed styles", async ({ page }) => {
   await page.goto("/components/foundations/visual-protocol");
@@ -760,6 +761,84 @@ test("projects native progress semantics through HeroUI feedback visuals", async
   expect(
     await rtlMeter.evaluate((element) => element.getBoundingClientRect().width),
   ).toBeLessThanOrEqual(256);
+});
+
+test("projects caller-owned Avatar image states through native image events", async ({ page }) => {
+  const avatarImageRelease = Deferred.makeUnsafe<void>();
+  const releaseAvatarImage = () => Effect.runSync(Deferred.succeed(avatarImageRelease, undefined));
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  page.once("close", releaseAvatarImage);
+  await page.route("**/avatar-delayed.svg", async (route) => {
+    await Effect.runPromise(Deferred.await(avatarImageRelease));
+    await route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#82a7f5"/></svg>',
+    });
+  });
+  await page.route("**/avatar-error.svg", (route) => route.abort());
+  await page.goto("/components/standalone/avatar", { waitUntil: "domcontentloaded" });
+
+  const avatar = page.getByRole("img", { name: "Ada Lovelace" });
+  await expect(avatar).toBeVisible();
+  await page.getByRole("button", { name: "显示Loading头像" }).click();
+  const image = avatar.locator('[data-slot="avatar-image"]');
+  await expect(image).toHaveAttribute("data-image-state", "loading");
+  await expect(image).toHaveCSS("opacity", "0");
+  expect(await image.evaluate((element) => getComputedStyle(element).transitionDuration)).not.toBe(
+    "0s",
+  );
+
+  releaseAvatarImage();
+  await expect(page.getByText("当前图片状态：Loaded", { exact: true })).toBeVisible();
+  await expect(image).toHaveAttribute("data-image-state", "loaded");
+  await expect(image).toHaveCSS("opacity", "1");
+
+  await page.getByRole("button", { name: "显示Loading头像" }).focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(avatar).not.toBeFocused();
+
+  await page.getByRole("button", { name: "尝试不可用图片" }).click();
+  await expect(page.getByText("当前图片状态：Failed", { exact: true })).toBeVisible();
+  await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCount(0);
+  await expect(avatar.getByText("AL", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "显示Missing头像" }).press("Enter");
+  await expect(page.getByText("当前图片状态：Missing", { exact: true })).toBeVisible();
+  await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCount(0);
+
+  const defaultAvatar = page.getByRole("img", { name: "默认小头像" });
+  const successAvatar = page.getByRole("img", { name: "成功中头像" });
+  const dangerAvatar = page.getByRole("img", { name: "危险大头像" });
+  const sizeAvatars = [defaultAvatar, successAvatar, dangerAvatar];
+  const avatarSizes = await Promise.all(
+    sizeAvatars.map((item) => item.evaluate((element) => element.getBoundingClientRect().width)),
+  );
+  expect(avatarSizes).toEqual([32, 40, 48]);
+  await expect(defaultAvatar).toHaveCSS("border-radius", "16px");
+  await expect(dangerAvatar).toHaveCSS("border-radius", "24px");
+  const fallbackColors = await Promise.all(
+    sizeAvatars.map((item) =>
+      item
+        .locator('[data-slot="avatar-fallback"]')
+        .evaluate((element) => getComputedStyle(element).color),
+    ),
+  );
+  expect(new Set(fallbackColors).size).toBe(3);
+  await expect(page.getByRole("img", { name: "强调色头像" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "警告色头像" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "自定义内容头像" })).toBeVisible();
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByRole("button", { name: "显示Loading头像" }).click();
+  await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCSS("transition-duration", "0s");
+  const lightBackground = await successAvatar.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await page.locator("html").evaluate((element) => element.setAttribute("data-theme", "dark"));
+  expect(
+    await successAvatar.evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).not.toBe(lightBackground);
 });
 
 test("browses and filters the component catalog through public routes", async ({ page }) => {

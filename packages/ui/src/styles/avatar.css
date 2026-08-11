@@ -1,0 +1,13 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/avatar.css" layer(components);
+
+.avatar__image[data-image-state="loading"] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar__image {
+    transition-duration: 0s;
+  }
+}

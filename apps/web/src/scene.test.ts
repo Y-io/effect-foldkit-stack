@@ -29,6 +29,7 @@ const modelOn = (route: Model["route"]): Model =>
     emptyStateExampleState: "Empty",
     progressExampleValue: 40,
     spinnerExampleState: "Loading",
+    avatarExampleState: "Loading",
   });
 
 describe("application view", () => {
@@ -326,6 +327,28 @@ describe("application view", () => {
       expect(text("项目已加载")).toExist(),
       click(role("button", { name: "重新显示加载状态" })),
       expect(spinner).toExist(),
+    );
+  });
+
+  test("renders Avatar fallback from the caller-owned image state", () => {
+    const avatar = role("img", { name: "Ada Lovelace" });
+
+    scene(
+      { update, view },
+      given(modelOn(ComponentStandaloneRoute({ slug: "avatar" }))),
+      expect(role("heading", { level: 1, name: "Avatar" })).toExist(),
+      expect(avatar).toExist(),
+      expect(text("AL")).toExist(),
+      expect(text("当前图片状态：Loading")).toExist(),
+      click(role("button", { name: "显示Loaded头像" })),
+      expect(avatar).toExist(),
+      expect(text("当前图片状态：Loaded")).toExist(),
+      click(role("button", { name: "显示Failed头像" })),
+      expect(avatar).toExist(),
+      expect(text("当前图片状态：Failed")).toExist(),
+      click(role("button", { name: "显示Missing头像" })),
+      expect(avatar).toExist(),
+      expect(text("当前图片状态：Missing")).toExist(),
     );
   });
 

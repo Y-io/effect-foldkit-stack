@@ -15,6 +15,10 @@
       "types": "./src/alert.ts",
       "import": "./src/alert.ts"
     },
+    "./avatar": {
+      "types": "./src/avatar.ts",
+      "import": "./src/avatar.ts"
+    },
     "./badge": {
       "types": "./src/badge.ts",
       "import": "./src/badge.ts"
@@ -117,6 +121,7 @@
     },
     "./styles.css": "./src/styles.css",
     "./styles/alert.css": "./src/styles/alert.css",
+    "./styles/avatar.css": "./src/styles/avatar.css",
     "./styles/base.css": "./src/styles/base.css",
     "./styles/badge.css": "./src/styles/badge.css",
     "./styles/button.css": "./src/styles/button.css",

@@ -436,6 +436,29 @@ export const meterMetadata = ComponentMetadata.make({
   differences: ["不从数值推断阈值颜色；调用方拥有边界规则并显式选择 color。"],
 });
 
+export const avatarMetadata = ComponentMetadata.make({
+  name: "Avatar",
+  title: "头像",
+  slug: "avatar",
+  catalog: "standalone",
+  phase: 1,
+  behaviorClass: "B",
+  behaviorAuthority: "外层 Model 与 Foldkit 原生 img load/error 事件",
+  status: "verified",
+  family: "data-display",
+  dependencies: ["@heroui/styles/components/avatar", "foldkit/html"],
+  anatomy: ["avatar root", "fallback", "optional image"],
+  publicParts: ["view", "ImageStatus", "ImageState"],
+  states: ["loading", "loaded", "failed", "missing", "color", "size", "variant"],
+  slots: ["avatar", "avatar-fallback", "avatar-image"],
+  heroUi: { version: "3.2.4", module: "avatar" },
+  foldkit: { primitive: "原生 img、OnLoad 与 OnError" },
+  examples: ["controlled", "loaded", "failed", "missing", "colors-sizes", "soft", "custom"],
+  differences: [
+    "不移植 React 的 useImageProps；调用方 Model 消费 Foldkit img 事件并传回 ImageState。",
+  ],
+});
+
 export const metadata: ReadonlyArray<ComponentMetadata> = [
   typographyMetadata,
   surfaceMetadata,
@@ -456,4 +479,5 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   progressBarMetadata,
   progressCircleMetadata,
   meterMetadata,
+  avatarMetadata,
 ];

@@ -124,6 +124,7 @@ export const Model = S.Struct({
   emptyStateExampleState: ComponentDocs.EmptyStateExampleState,
   progressExampleValue: S.Int,
   spinnerExampleState: ComponentDocs.SpinnerExampleState,
+  avatarExampleState: ComponentDocs.AvatarExampleState,
 });
 export type Model = typeof Model.Type;
 
@@ -160,6 +161,9 @@ export const AdvancedProgressExample = m("AdvancedProgressExample");
 export const SelectedSpinnerExampleState = m("SelectedSpinnerExampleState", {
   state: ComponentDocs.SpinnerExampleState,
 });
+export const SelectedAvatarExampleState = m("SelectedAvatarExampleState", {
+  state: ComponentDocs.AvatarExampleState,
+});
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -183,6 +187,7 @@ export const Message = S.Union([
   SelectedEmptyStateExampleState,
   AdvancedProgressExample,
   SelectedSpinnerExampleState,
+  SelectedAvatarExampleState,
 ]);
 export type Message = typeof Message.Type;
 
@@ -255,6 +260,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     emptyStateExampleState: "Empty",
     progressExampleValue: INITIAL_PROGRESS_EXAMPLE_VALUE,
     spinnerExampleState: "Loading",
+    avatarExampleState: "Loading",
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -382,6 +388,10 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
       SelectedSpinnerExampleState: ({ state }) => [
         evo(model, { spinnerExampleState: () => state }),
+        [],
+      ],
+      SelectedAvatarExampleState: ({ state }) => [
+        evo(model, { avatarExampleState: () => state }),
         [],
       ],
     }),
@@ -1200,6 +1210,8 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
             onAdvanceProgressExample: AdvancedProgressExample(),
             spinnerExampleState: model.spinnerExampleState,
             onSpinnerExampleStateChange: (state) => SelectedSpinnerExampleState({ state }),
+            avatarExampleState: model.avatarExampleState,
+            onAvatarExampleStateChange: (state) => SelectedAvatarExampleState({ state }),
           },
           h,
         ),
