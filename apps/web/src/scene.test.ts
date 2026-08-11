@@ -40,6 +40,7 @@ const modelOn = (route: Model["route"]): Model =>
     spinnerExampleState: "Loading",
     avatarExampleState: "Loading",
     buttonExampleActionCount: 0,
+    buttonGroupExampleActionCount: 0,
   });
 
 describe("application view", () => {
@@ -122,6 +123,19 @@ describe("application view", () => {
       expect(text("Secondary Surface")).toExist(),
       expect(text("调用方拥有 Surface 内的内容与语义。")).toExist(),
       expect(role("region", { name: "Secondary Surface" })).toExist(),
+    );
+  });
+
+  test("documents ButtonGroup as a visual arrangement without owning Button behavior", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "button-group" }))),
+      expect(role("heading", { level: 1, name: "ButtonGroup" })).toExist(),
+      expect(role("button", { name: "保存分组" })).toExist(),
+      expect(role("button", { name: "取消分组" })).toExist(),
+      expect(text("已记录按钮组操作 0 次")).toExist(),
+      click(role("button", { name: "保存分组" })),
+      expect(text("已记录按钮组操作 1 次")).toExist(),
     );
   });
 

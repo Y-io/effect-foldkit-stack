@@ -3,6 +3,7 @@ import {
   Avatar,
   Badge,
   Button,
+  ButtonGroup,
   Card,
   Chip,
   CloseButton,
@@ -44,6 +45,7 @@ import {
   avatarMetadata,
   badgeMetadata,
   buttonMetadata,
+  buttonGroupMetadata,
   type BehaviorClass,
   type Catalog,
   cardMetadata,
@@ -106,6 +108,8 @@ type PartViewConfig<Message> = Readonly<{
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
   recordedChipActionCount: number;
   onRecordChipAction: Message;
+  buttonGroupExampleActionCount: number;
+  onButtonGroupExampleAction: Message;
   skeletonExampleState: SkeletonExampleState;
   onSkeletonExampleStateChange: (state: SkeletonExampleState) => Message;
   verticalScrollShadowVisibility: ScrollShadowExampleVisibility;
@@ -1396,6 +1400,143 @@ const chipPageView = <Message>(config: PartViewConfig<Message>, h: HtmlBuilder<M
     h,
   );
 
+const buttonGroupPageView = <Message>(
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    buttonGroupMetadata,
+    {
+      summary: "将相邻 Button 投射为共享的 HeroUI Control Surface，不拥有成员行为。",
+      usage: "用于一组相关操作。调用方分别提供每个 Button 的 Message 与 disabled 事实。",
+      avoidance: "不用于选择、pressed collection 或统一 disabled 状态，这些属于后续有行为组件。",
+      behavior:
+        "ButtonGroup 不创建 Model、Message 或事件。成员继续由 Foldkit Button 原样派发 click、Enter、Space 与 aria-disabled。",
+      visual:
+        "orientation、fullWidth 与相邻边界直接映射 HeroUI buttonGroupVariants；组内 Button 让渡圆角与 pressed scale。",
+      api: "view 接收调用方创建的成员内容；separatorView 只渲染装饰性分隔，不添加语义或交互。",
+      keyboardAndFocus:
+        "wrapper 不可聚焦且不截获事件。成员保留 Tab 顺序和局部 focus-visible ring。",
+      aria: "ButtonGroup 不生成 group role、disabled 或 pressed 属性。成员保留自己的原生 Button 语义。",
+      examples: [
+        exampleView(
+          "横向受控操作",
+          [
+            ButtonGroup.view(
+              {
+                content: [
+                  Button.view(
+                    {
+                      content: "保存分组",
+                      variant: "outline",
+                      onClick: config.onButtonGroupExampleAction,
+                    },
+                    h,
+                  ),
+                  Button.view(
+                    {
+                      content: "取消分组",
+                      variant: "outline",
+                      onClick: config.onButtonGroupExampleAction,
+                    },
+                    h,
+                  ),
+                  Button.view({ content: "不可用分组", variant: "outline", isDisabled: true }, h),
+                ],
+              },
+              h,
+            ),
+            h.output([], [`已记录按钮组操作 ${config.buttonGroupExampleActionCount} 次`]),
+          ],
+          h,
+        ),
+        exampleView(
+          "纵向与 separator",
+          [
+            ButtonGroup.view(
+              {
+                orientation: "vertical",
+                content: [
+                  Button.view({ content: "上移", variant: "outline" }, h),
+                  ButtonGroup.separatorView({}, h),
+                  Button.view({ content: "下移", variant: "outline" }, h),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "全宽与溢出",
+          [
+            ButtonGroup.view(
+              {
+                fullWidth: true,
+                className: "mb-4",
+                content: [
+                  Button.view({ content: "全宽主操作", variant: "primary" }, h),
+                  Button.view({ content: "全宽次操作", variant: "secondary" }, h),
+                ],
+              },
+              h,
+            ),
+            ButtonGroup.view(
+              {
+                className: "max-w-48 overflow-x-auto",
+                attributes: [h.AriaLabel("溢出按钮组示例")],
+                content: [
+                  Button.view({ content: "不可截断的长操作一", variant: "outline" }, h),
+                  Button.view({ content: "不可截断的长操作二", variant: "outline" }, h),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "主题状态投射",
+          [
+            h.div(
+              [h.Class("grid gap-3 sm:grid-cols-2")],
+              [
+                h.div(
+                  [h.DataAttribute("theme", "light"), h.Class("rounded-xl bg-background p-4")],
+                  [
+                    ButtonGroup.view(
+                      {
+                        content: [
+                          Button.view({ content: "Light ButtonGroup", variant: "tertiary" }, h),
+                        ],
+                      },
+                      h,
+                    ),
+                  ],
+                ),
+                h.div(
+                  [h.DataAttribute("theme", "dark"), h.Class("rounded-xl bg-background p-4")],
+                  [
+                    ButtonGroup.view(
+                      {
+                        content: [
+                          Button.view({ content: "Dark ButtonGroup", variant: "tertiary" }, h),
+                        ],
+                      },
+                      h,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 const cardPageView = <Message>(h: HtmlBuilder<Message>): Html =>
   componentPageView(
     cardMetadata,
@@ -2672,6 +2813,8 @@ export const partView = <Message>(
     return badgePageView(h);
   } else if (slug === chipMetadata.slug) {
     return chipPageView(config, h);
+  } else if (slug === buttonGroupMetadata.slug) {
+    return buttonGroupPageView(config, h);
   } else if (slug === cardMetadata.slug) {
     return cardPageView(h);
   } else if (slug === skeletonMetadata.slug) {

@@ -128,6 +128,7 @@ export const Model = S.Struct({
   spinnerExampleState: ComponentDocs.SpinnerExampleState,
   avatarExampleState: ComponentDocs.AvatarExampleState,
   buttonExampleActionCount: S.Int,
+  buttonGroupExampleActionCount: S.Int,
 });
 export type Model = typeof Model.Type;
 
@@ -177,6 +178,7 @@ export const SelectedAvatarExampleState = m("SelectedAvatarExampleState", {
   state: ComponentDocs.AvatarExampleState,
 });
 export const RecordedButtonExampleAction = m("RecordedButtonExampleAction");
+export const RecordedButtonGroupExampleAction = m("RecordedButtonGroupExampleAction");
 
 export const Message = S.Union([
   CompletedNavigateInternal,
@@ -204,6 +206,7 @@ export const Message = S.Union([
   SelectedSpinnerExampleState,
   SelectedAvatarExampleState,
   RecordedButtonExampleAction,
+  RecordedButtonGroupExampleAction,
 ]);
 export type Message = typeof Message.Type;
 
@@ -280,6 +283,7 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     spinnerExampleState: "Loading",
     avatarExampleState: "Loading",
     buttonExampleActionCount: 0,
+    buttonGroupExampleActionCount: 0,
   });
 
   return [model, commandsForRoute(route, model.isSignedIn)];
@@ -423,6 +427,10 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
       RecordedButtonExampleAction: () => [
         evo(model, { buttonExampleActionCount: Number.increment }),
+        [],
+      ],
+      RecordedButtonGroupExampleAction: () => [
+        evo(model, { buttonGroupExampleActionCount: Number.increment }),
         [],
       ],
     }),
@@ -1224,6 +1232,8 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
             onFieldExampleStateChange: (state) => SelectedFieldExampleState({ state }),
             recordedChipActionCount: model.recordedChipActionCount,
             onRecordChipAction: RecordedChipAction(),
+            buttonGroupExampleActionCount: model.buttonGroupExampleActionCount,
+            onButtonGroupExampleAction: RecordedButtonGroupExampleAction(),
             skeletonExampleState: model.skeletonExampleState,
             onSkeletonExampleStateChange: (state) => SelectedSkeletonExampleState({ state }),
             verticalScrollShadowVisibility: model.verticalScrollShadowVisibility,

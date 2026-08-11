@@ -501,6 +501,27 @@ export const buttonMetadata = ComponentMetadata.make({
   differences: ["pending 映射为 Foldkit Button 的 disabled 事实，不创建独立加载状态机。"],
 });
 
+export const buttonGroupMetadata = ComponentMetadata.make({
+  name: "ButtonGroup",
+  title: "按钮组",
+  slug: "button-group",
+  catalog: "parts",
+  phase: 2,
+  behaviorClass: "A",
+  behaviorAuthority: "成员 Button 各自拥有 Message、disabled 与焦点行为",
+  status: "verified",
+  family: "actions",
+  dependencies: ["@heroui/styles/components/button-group", "foldkit/html"],
+  anatomy: ["button-group root", "direct Button children", "decorative separators"],
+  publicParts: ["view", "separatorView"],
+  states: ["horizontal", "vertical", "full-width", "compact", "overflow"],
+  slots: ["button-group", "button-group-separator"],
+  heroUi: { version: "3.2.4", module: "button-group" },
+  foldkit: { primitive: "成员原生 Button 与调用方 Message" },
+  examples: ["horizontal", "vertical", "compact", "full-width", "overflow", "controlled"],
+  differences: ["不移植 React Context 或 Group；wrapper 不转发或拦截成员状态与事件。"],
+});
+
 export const closeButtonMetadata = ComponentMetadata.make({
   name: "CloseButton",
   title: "关闭按钮",
@@ -545,5 +566,6 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   avatarMetadata,
   scrollShadowMetadata,
   buttonMetadata,
+  buttonGroupMetadata,
   closeButtonMetadata,
 ];

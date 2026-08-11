@@ -2,6 +2,7 @@ export { default as Alert } from "./alert";
 export { default as Avatar } from "./avatar";
 export { default as Badge } from "./badge";
 export { default as Button } from "./button";
+export { default as ButtonGroup } from "./button-group";
 export { default as Card } from "./card";
 export { default as Chip } from "./chip";
 export { default as CloseButton } from "./close-button";

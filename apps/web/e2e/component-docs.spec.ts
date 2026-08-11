@@ -929,6 +929,74 @@ test("projects Foldkit Button semantics through Button and CloseButton visuals",
   );
 });
 
+test("projects ButtonGroup layout without replacing member Button behavior", async ({ page }) => {
+  await page.goto("/components/parts/button-group");
+
+  const save = page.getByRole("button", { name: "保存分组", exact: true });
+  const cancel = page.getByRole("button", { name: "取消分组", exact: true });
+  const disabled = page.getByRole("button", { name: "不可用分组", exact: true });
+  const horizontal = page.locator('[data-slot="button-group"]').filter({ has: save });
+  await expect(horizontal).toHaveCSS("flex-direction", "row");
+  await expect(horizontal).not.toHaveAttribute("role");
+  await expect(horizontal).not.toHaveAttribute("tabindex");
+  await save.focus();
+  await page.keyboard.press("Tab");
+  await expect(cancel).toBeFocused();
+  await expect(cancel).toHaveCSS("z-index", "10");
+  expect(await save.evaluate((element) => getComputedStyle(element).borderTopRightRadius)).toBe(
+    "0px",
+  );
+  expect(await cancel.evaluate((element) => getComputedStyle(element).borderTopLeftRadius)).toBe(
+    "0px",
+  );
+  await cancel.hover();
+  await page.mouse.down();
+  await expect(cancel).toHaveCSS("transform", "none");
+  await page.mouse.up();
+  await save.click();
+  await expect(page.getByText("已记录按钮组操作 2 次", { exact: true })).toBeVisible();
+  await disabled.focus();
+  await expect(disabled).toBeFocused();
+  await disabled.press("Enter");
+  await expect(page.getByText("已记录按钮组操作 2 次", { exact: true })).toBeVisible();
+
+  const vertical = page.locator('[data-slot="button-group"]').filter({
+    has: page.getByRole("button", { name: "上移", exact: true }),
+  });
+  await expect(vertical).toHaveCSS("flex-direction", "column");
+  const separator = vertical.locator('[data-slot="button-group-separator"]');
+  await expect(separator).toBeVisible();
+  const verticalBox = await vertical.boundingBox();
+  const separatorBox = await separator.boundingBox();
+  expect(verticalBox).not.toBeNull();
+  expect(separatorBox).not.toBeNull();
+  if (verticalBox === null || separatorBox === null) {
+    throw new Error("ButtonGroup geometry should be available in the browser");
+  }
+  expect(separatorBox.x).toBeGreaterThanOrEqual(verticalBox.x - 2);
+  expect(separatorBox.x).toBeLessThan(verticalBox.x + verticalBox.width);
+  expect(separatorBox.y).toBeGreaterThanOrEqual(verticalBox.y - 2);
+  expect(separatorBox.y).toBeLessThan(verticalBox.y + verticalBox.height);
+
+  const fullWidth = page.getByRole("button", { name: "全宽主操作", exact: true });
+  const fullWidthGroup = page.locator('[data-slot="button-group"]').filter({ has: fullWidth });
+  expect(
+    await fullWidthGroup.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThan(await horizontal.evaluate((element) => element.getBoundingClientRect().width));
+
+  const overflow = page.getByLabel("溢出按钮组示例");
+  await expect(overflow).toHaveCSS("overflow-x", "auto");
+  await expect
+    .poll(() => overflow.evaluate((element) => element.scrollWidth > element.clientWidth))
+    .toBe(true);
+
+  const light = page.getByRole("button", { name: "Light ButtonGroup", exact: true });
+  const dark = page.getByRole("button", { name: "Dark ButtonGroup", exact: true });
+  expect(await light.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(
+    await dark.evaluate((element) => getComputedStyle(element).backgroundColor),
+  );
+});
+
 test("projects ScrollShadow edges from real scrolling without changing native semantics", async ({
   page,
 }) => {

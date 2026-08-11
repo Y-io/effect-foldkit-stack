@@ -1,0 +1,11 @@
+@reference "./base.css";
+
+@import "@heroui/styles/components/button-group.css" layer(components);
+
+.button-group {
+  position: relative;
+}
+
+.button-group .button:focus-visible {
+  z-index: 10;
+}
