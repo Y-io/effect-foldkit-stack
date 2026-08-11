@@ -490,6 +490,8 @@ describe("application view", () => {
       expect(role("link", { name: "ProgressBar" })).toExist(),
       expect(role("link", { name: "ProgressCircle" })).toExist(),
       expect(role("link", { name: "Meter" })).toExist(),
+      expect(role("link", { name: "Avatar" })).toExist(),
+      expect(role("link", { name: "ScrollShadow" })).toExist(),
     );
   });
 
