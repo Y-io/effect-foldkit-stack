@@ -459,6 +459,27 @@ export const avatarMetadata = ComponentMetadata.make({
   ],
 });
 
+export const scrollShadowMetadata = ComponentMetadata.make({
+  name: "ScrollShadow",
+  title: "滚动阴影",
+  slug: "scroll-shadow",
+  catalog: "parts",
+  phase: 1,
+  behaviorClass: "B",
+  behaviorAuthority: "Foldkit Mount、原生 scroll、ResizeObserver 与 MutationObserver",
+  status: "verified",
+  family: "layout",
+  dependencies: ["@heroui/styles/components/scroll-shadow", "foldkit/mount"],
+  anatomy: ["scroll container", "scroll-shadow slot", "内容"],
+  publicParts: ["view", "ObserveScrollShadow", "Visibility", "Orientation"],
+  states: ["none", "start", "end", "both", "vertical", "horizontal", "fade"],
+  slots: ["scroll-shadow"],
+  heroUi: { version: "3.2.4", module: "scroll-shadow" },
+  foldkit: { primitive: "Mount.defineStream、原生 scroll 与 DOM observers" },
+  examples: ["vertical", "horizontal", "overflow", "no-overflow", "controlled"],
+  differences: ["不移植 React hook；Mount 生命周期观察 DOM，外层 Model 持有可见边缘。"],
+});
+
 export const metadata: ReadonlyArray<ComponentMetadata> = [
   typographyMetadata,
   surfaceMetadata,
@@ -480,4 +501,5 @@ export const metadata: ReadonlyArray<ComponentMetadata> = [
   progressCircleMetadata,
   meterMetadata,
   avatarMetadata,
+  scrollShadowMetadata,
 ];

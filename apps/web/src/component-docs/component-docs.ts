@@ -16,6 +16,7 @@ import {
   ProgressCircle,
   Separator,
   Skeleton,
+  ScrollShadow,
   Spinner,
   Surface,
   Typography,
@@ -58,6 +59,7 @@ import {
   metadata,
   progressBarMetadata,
   progressCircleMetadata,
+  scrollShadowMetadata,
   separatorMetadata,
   skeletonMetadata,
   spinnerMetadata,
@@ -91,6 +93,10 @@ export const AvatarExampleState = S.Literals([
 ]);
 export type AvatarExampleState = typeof AvatarExampleState.Type;
 
+/** ScrollShadow 文档示例中由 Foldkit Mount 观察到的边缘状态。 */
+export const ScrollShadowExampleVisibility = S.Literals(["None", "Start", "End", "Both"]);
+export type ScrollShadowExampleVisibility = typeof ScrollShadowExampleVisibility.Type;
+
 type PartViewConfig<Message> = Readonly<{
   fieldExampleState: FieldExampleState;
   onFieldExampleStateChange: (state: FieldExampleState) => Message;
@@ -98,6 +104,10 @@ type PartViewConfig<Message> = Readonly<{
   onRecordChipAction: Message;
   skeletonExampleState: SkeletonExampleState;
   onSkeletonExampleStateChange: (state: SkeletonExampleState) => Message;
+  verticalScrollShadowVisibility: ScrollShadowExampleVisibility;
+  onVerticalScrollShadowVisibilityChange: (visibility: ScrollShadowExampleVisibility) => Message;
+  horizontalScrollShadowVisibility: ScrollShadowExampleVisibility;
+  onHorizontalScrollShadowVisibilityChange: (visibility: ScrollShadowExampleVisibility) => Message;
 }>;
 
 type StandaloneViewConfig<Message> = Readonly<{
@@ -2540,6 +2550,95 @@ const missingPartView = <Message>(slug: string, h: HtmlBuilder<Message>): Html =
     ],
   );
 
+const scrollShadowPageView = <Message>(
+  config: PartViewConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  componentPageView(
+    scrollShadowMetadata,
+    {
+      summary: "以 Foldkit Mount 观察真实滚动容器，并投射 HeroUI ScrollShadow 边缘阴影。",
+      usage: "用于可滚动内容的开始与结束边缘提示，不改变内容的原生滚动语义。",
+      avoidance: "不要在组件中维护第二滚动状态机；可见边缘由 Mount Message 写入外层 Model。",
+      behavior:
+        "Mount 在元素存在时建立 scroll listener、ResizeObserver 与 MutationObserver，并在滚动、viewport 或内容变化时发出 Visibility。元素卸载时由 Mount 自动释放它们。",
+      visual:
+        "visibility 映射 HeroUI 的 data-top/bottom 或 data-left/right 属性；orientation、hideScrollBar、fade 与 size 投射 HeroUI styles。",
+      api: "view 要求 content、visibility 与 onVisibilityChange；可选 orientation、offset、size、isEnabled、attributes 与 className。",
+      keyboardAndFocus:
+        "ScrollShadow 不添加 tabindex、role 或键盘处理。原生 scroll container 保留浏览器的滚动、焦点与辅助技术语义。",
+      aria: "组件不改写子内容的 ARIA；调用方在需要时通过 attributes 提供可访问名称。",
+      examples: [
+        exampleView(
+          "垂直溢出与外层状态",
+          [
+            ScrollShadow.view(
+              {
+                content: [
+                  h.div(
+                    [h.Class("min-h-96 space-y-3 p-4")],
+                    [
+                      h.p([], ["第 1 行：滚动容器保留原生行为。"]),
+                      h.p([], ["第 2 行：顶部与底部阴影由 Mount 观察。"]),
+                      h.p([], ["第 3 行：内容变化也会重新计算边缘。"]),
+                      h.p([], ["第 4 行：抵达末尾后底部阴影消失。"]),
+                      h.p([], ["第 5 行：这是用于验证溢出的最后一行。"]),
+                    ],
+                  ),
+                ],
+                visibility: config.verticalScrollShadowVisibility,
+                onVisibilityChange: config.onVerticalScrollShadowVisibilityChange,
+                attributes: [h.AriaLabel("垂直滚动阴影示例"), h.Class("h-28 border border-border")],
+              },
+              h,
+            ),
+            h.p(
+              [h.Class("mt-3 text-muted")],
+              [`当前可见边缘：${config.verticalScrollShadowVisibility}`],
+            ),
+          ],
+          h,
+        ),
+        exampleView(
+          "水平、自定义阴影与无溢出边界",
+          [
+            ScrollShadow.view(
+              {
+                content: [h.div([h.Class("w-[40rem] p-4")], ["横向滚动内容"])],
+                visibility: config.horizontalScrollShadowVisibility,
+                onVisibilityChange: config.onHorizontalScrollShadowVisibilityChange,
+                orientation: "Horizontal",
+                hideScrollBar: true,
+                offset: 12,
+                size: 24,
+                attributes: [
+                  h.AriaLabel("水平滚动阴影示例"),
+                  h.Class("max-w-64 border border-border"),
+                ],
+              },
+              h,
+            ),
+            ScrollShadow.view(
+              {
+                content: [h.p([h.Class("p-4")], ["没有溢出时不显示阴影。"])],
+                visibility: "None",
+                onVisibilityChange: config.onVerticalScrollShadowVisibilityChange,
+                isEnabled: false,
+                attributes: [
+                  h.AriaLabel("无溢出滚动阴影示例"),
+                  h.Class("mt-4 border border-border"),
+                ],
+              },
+              h,
+            ),
+          ],
+          h,
+        ),
+      ],
+    },
+    h,
+  );
+
 export const partView = <Message>(
   slug: string,
   config: PartViewConfig<Message>,
@@ -2571,6 +2670,8 @@ export const partView = <Message>(
     return cardPageView(h);
   } else if (slug === skeletonMetadata.slug) {
     return skeletonPageView(config, h);
+  } else if (slug === scrollShadowMetadata.slug) {
+    return scrollShadowPageView(config, h);
   } else {
     return missingPartView(slug, h);
   }

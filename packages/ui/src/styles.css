@@ -20,6 +20,7 @@
 @import "./styles/header.css";
 @import "./styles/combobox.css";
 @import "./styles/separator.css";
+@import "./styles/scroll-shadow.css";
 @import "./styles/skeleton.css";
 @import "./styles/spinner.css";
 @import "./styles/surface.css";

@@ -1,9 +1,16 @@
 import { Option } from "effect";
-import { click, expect, given, role, scene, text } from "foldkit/scene";
+import { Mount, click, expect, given, role, scene, text } from "foldkit/scene";
 import { describe, test } from "vitest";
+import { ObserveScrollShadow } from "@pkg/ui/scroll-shadow";
 
 import * as Counter from "./counter";
-import { Model, update, view } from "./main";
+import {
+  Model,
+  ObservedHorizontalScrollShadowVisibility,
+  ObservedVerticalScrollShadowVisibility,
+  update,
+  view,
+} from "./main";
 import {
   ComponentPartRoute,
   ComponentStandaloneRoute,
@@ -25,6 +32,8 @@ const modelOn = (route: Model["route"]): Model =>
     fieldExampleState: "Helper",
     recordedChipActionCount: 0,
     skeletonExampleState: "Loading",
+    verticalScrollShadowVisibility: "None",
+    horizontalScrollShadowVisibility: "None",
     emptyStateRetryCount: 0,
     emptyStateExampleState: "Empty",
     progressExampleValue: 40,
@@ -349,6 +358,24 @@ describe("application view", () => {
       click(role("button", { name: "显示Missing头像" })),
       expect(avatar).toExist(),
       expect(text("当前图片状态：Missing")).toExist(),
+    );
+  });
+
+  test("projects ScrollShadow edge visibility from its Foldkit Mount", () => {
+    scene(
+      { update, view },
+      given(modelOn(ComponentPartRoute({ slug: "scroll-shadow" }))),
+      expect(role("heading", { level: 1, name: "ScrollShadow" })).toExist(),
+      Mount.expectHas(ObserveScrollShadow({ orientation: "Vertical", offset: 0 })),
+      Mount.resolve(
+        ObserveScrollShadow({ orientation: "Vertical", offset: 0 }),
+        ObservedVerticalScrollShadowVisibility({ visibility: "End" }),
+      ),
+      Mount.resolve(
+        ObserveScrollShadow({ orientation: "Horizontal", offset: 12 }),
+        ObservedHorizontalScrollShadowVisibility({ visibility: "End" }),
+      ),
+      expect(text("当前可见边缘：End")).toExist(),
     );
   });
 

@@ -1,6 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
 
+declare global {
+  interface Window {
+    __scrollShadowLifecycle: {
+      mutationDisconnects: number;
+      resizeDisconnects: number;
+      scrollRemovals: number;
+    };
+  }
+}
+
 test("proves the stage-one visual protocol with real computed styles", async ({ page }) => {
   await page.goto("/components/foundations/visual-protocol");
 
@@ -839,6 +849,113 @@ test("projects caller-owned Avatar image states through native image events", as
   expect(
     await successAvatar.evaluate((element) => getComputedStyle(element).backgroundColor),
   ).not.toBe(lightBackground);
+});
+
+test("projects ScrollShadow edges from real scrolling without changing native semantics", async ({
+  page,
+}) => {
+  await page.goto("/components/parts/scroll-shadow");
+
+  const vertical = page.getByLabel("垂直滚动阴影示例");
+  await expect(vertical).toHaveAttribute("data-slot", "scroll-shadow");
+  await expect(vertical).not.toHaveAttribute("role");
+  await expect
+    .poll(() => vertical.evaluate((element) => element.scrollHeight > element.clientHeight))
+    .toBe(true);
+  await vertical.evaluate((element) => {
+    element.scrollTop = 30;
+    element.dispatchEvent(new Event("scroll"));
+  });
+  await expect(vertical).toHaveAttribute("data-top-bottom-scroll", "true");
+  await vertical.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+    element.dispatchEvent(new Event("scroll"));
+  });
+  await expect(vertical).toHaveAttribute("data-top-scroll", "true");
+  await expect(vertical).not.toHaveAttribute("data-bottom-scroll");
+
+  const horizontal = page.getByLabel("水平滚动阴影示例");
+  await expect(horizontal).toHaveAttribute("data-orientation", "horizontal");
+  await expect(horizontal).toHaveCSS("overflow-x", "auto");
+  await expect(horizontal).toHaveCSS("--scroll-shadow-size", "24px");
+  await expect
+    .poll(() => horizontal.evaluate((element) => element.scrollWidth > element.clientWidth))
+    .toBe(true);
+  await horizontal.evaluate((element) => {
+    element.scrollLeft = 30;
+    element.dispatchEvent(new Event("scroll"));
+  });
+  await expect(horizontal).toHaveAttribute("data-left-right-scroll", "true");
+  await horizontal.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+    element.dispatchEvent(new Event("scroll"));
+  });
+  await expect(horizontal).toHaveAttribute("data-left-scroll", "true");
+  await expect(horizontal).not.toHaveAttribute("data-right-scroll");
+});
+
+test("updates and releases ScrollShadow observers with its mounted container", async ({ page }) => {
+  await page.addInitScript(() => {
+    const state = { mutationDisconnects: 0, resizeDisconnects: 0, scrollRemovals: 0 };
+    const NativeMutationObserver = window.MutationObserver;
+    const NativeResizeObserver = window.ResizeObserver;
+    const removeEventListener = EventTarget.prototype.removeEventListener;
+
+    class TrackingMutationObserver extends NativeMutationObserver {
+      disconnect() {
+        state.mutationDisconnects += 1;
+        super.disconnect();
+      }
+    }
+    class TrackingResizeObserver extends NativeResizeObserver {
+      disconnect() {
+        state.resizeDisconnects += 1;
+        super.disconnect();
+      }
+    }
+
+    window.MutationObserver = TrackingMutationObserver;
+    window.ResizeObserver = TrackingResizeObserver;
+    EventTarget.prototype.removeEventListener = function (type, listener, options) {
+      if (
+        type === "scroll" &&
+        this instanceof HTMLElement &&
+        this.getAttribute("aria-label") === "垂直滚动阴影示例"
+      ) {
+        state.scrollRemovals += 1;
+      }
+      return removeEventListener.call(this, type, listener, options);
+    };
+    Object.assign(window, { __scrollShadowLifecycle: state });
+  });
+  await page.goto("/components/parts/scroll-shadow");
+
+  const vertical = page.getByLabel("垂直滚动阴影示例");
+  await vertical.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+    element.dispatchEvent(new Event("scroll"));
+  });
+  await expect(vertical).toHaveAttribute("data-top-scroll", "true");
+  await vertical.evaluate((element) => {
+    const content = document.createElement("div");
+    content.style.height = "24rem";
+    element.append(content);
+  });
+  await expect(vertical).toHaveAttribute("data-top-bottom-scroll", "true");
+  await vertical.evaluate((element) => {
+    element.style.height = "100rem";
+  });
+  await expect(vertical).not.toHaveAttribute("data-top-bottom-scroll");
+
+  await page.locator('a[href="/components/parts/typography"]').first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Typography" })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => window.__scrollShadowLifecycle))
+    .toEqual({
+      mutationDisconnects: 2,
+      resizeDisconnects: 2,
+      scrollRemovals: 1,
+    });
 });
 
 test("browses and filters the component catalog through public routes", async ({ page }) => {

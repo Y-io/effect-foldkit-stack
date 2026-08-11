@@ -103,6 +103,10 @@
       "types": "./src/separator.ts",
       "import": "./src/separator.ts"
     },
+    "./scroll-shadow": {
+      "types": "./src/scroll-shadow.ts",
+      "import": "./src/scroll-shadow.ts"
+    },
     "./skeleton": {
       "types": "./src/skeleton.ts",
       "import": "./src/skeleton.ts"
@@ -144,6 +148,7 @@
     "./styles/typography.css": "./src/styles/typography.css",
     "./styles/surface.css": "./src/styles/surface.css",
     "./styles/separator.css": "./src/styles/separator.css",
+    "./styles/scroll-shadow.css": "./src/styles/scroll-shadow.css",
     "./styles/skeleton.css": "./src/styles/skeleton.css",
     "./styles/spinner.css": "./src/styles/spinner.css",
     "./package.json": "./package.json"

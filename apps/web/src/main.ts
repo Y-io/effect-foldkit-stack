@@ -120,6 +120,8 @@ export const Model = S.Struct({
   fieldExampleState: ComponentDocs.FieldExampleState,
   recordedChipActionCount: S.Int,
   skeletonExampleState: ComponentDocs.SkeletonExampleState,
+  verticalScrollShadowVisibility: ComponentDocs.ScrollShadowExampleVisibility,
+  horizontalScrollShadowVisibility: ComponentDocs.ScrollShadowExampleVisibility,
   emptyStateRetryCount: S.Int,
   emptyStateExampleState: ComponentDocs.EmptyStateExampleState,
   progressExampleValue: S.Int,
@@ -153,6 +155,15 @@ export const RecordedChipAction = m("RecordedChipAction");
 export const SelectedSkeletonExampleState = m("SelectedSkeletonExampleState", {
   state: ComponentDocs.SkeletonExampleState,
 });
+export const ObservedVerticalScrollShadowVisibility = m("ObservedVerticalScrollShadowVisibility", {
+  visibility: ComponentDocs.ScrollShadowExampleVisibility,
+});
+export const ObservedHorizontalScrollShadowVisibility = m(
+  "ObservedHorizontalScrollShadowVisibility",
+  {
+    visibility: ComponentDocs.ScrollShadowExampleVisibility,
+  },
+);
 export const RequestedEmptyStateRetry = m("RequestedEmptyStateRetry");
 export const SelectedEmptyStateExampleState = m("SelectedEmptyStateExampleState", {
   state: ComponentDocs.EmptyStateExampleState,
@@ -183,6 +194,8 @@ export const Message = S.Union([
   SelectedFieldExampleState,
   RecordedChipAction,
   SelectedSkeletonExampleState,
+  ObservedVerticalScrollShadowVisibility,
+  ObservedHorizontalScrollShadowVisibility,
   RequestedEmptyStateRetry,
   SelectedEmptyStateExampleState,
   AdvancedProgressExample,
@@ -256,6 +269,8 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url: Url) =
     fieldExampleState: "Helper",
     recordedChipActionCount: 0,
     skeletonExampleState: "Loading",
+    verticalScrollShadowVisibility: "None",
+    horizontalScrollShadowVisibility: "None",
     emptyStateRetryCount: 0,
     emptyStateExampleState: "Empty",
     progressExampleValue: INITIAL_PROGRESS_EXAMPLE_VALUE,
@@ -367,6 +382,14 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       RecordedChipAction: () => [evo(model, { recordedChipActionCount: Number.increment }), []],
       SelectedSkeletonExampleState: ({ state }) => [
         evo(model, { skeletonExampleState: () => state }),
+        [],
+      ],
+      ObservedVerticalScrollShadowVisibility: ({ visibility }) => [
+        evo(model, { verticalScrollShadowVisibility: () => visibility }),
+        [],
+      ],
+      ObservedHorizontalScrollShadowVisibility: ({ visibility }) => [
+        evo(model, { horizontalScrollShadowVisibility: () => visibility }),
         [],
       ],
       RequestedEmptyStateRetry: () => [
@@ -1195,6 +1218,12 @@ const routeContentView = (model: Model, h: HtmlBuilder<Message>): Html =>
             onRecordChipAction: RecordedChipAction(),
             skeletonExampleState: model.skeletonExampleState,
             onSkeletonExampleStateChange: (state) => SelectedSkeletonExampleState({ state }),
+            verticalScrollShadowVisibility: model.verticalScrollShadowVisibility,
+            onVerticalScrollShadowVisibilityChange: (visibility) =>
+              ObservedVerticalScrollShadowVisibility({ visibility }),
+            horizontalScrollShadowVisibility: model.horizontalScrollShadowVisibility,
+            onHorizontalScrollShadowVisibilityChange: (visibility) =>
+              ObservedHorizontalScrollShadowVisibility({ visibility }),
           },
           h,
         ),

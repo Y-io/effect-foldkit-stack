@@ -19,6 +19,7 @@ export { default as Meter } from "./meter";
 export { default as ProgressBar } from "./progress-bar";
 export { default as ProgressCircle } from "./progress-circle";
 export { default as Separator } from "./separator";
+export { default as ScrollShadow } from "./scroll-shadow";
 export { default as Skeleton } from "./skeleton";
 export { default as Spinner } from "./spinner";
 export { default as Surface } from "./surface";
